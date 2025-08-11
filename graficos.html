@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RunAWay</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" type="image/png" href="logo.png">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root { 
+            --glow-color: #FF7700; 
+            --background-color: #282828;
+            --card-color: #333333;
+            --text-color: #E0E0E0;
+        }
+        html, body {
+            height: 100%;
+        }
+        body { 
+            font-family: 'Chakra Petch', sans-serif; 
+            background-color: var(--background-color); 
+            color: var(--text-color); 
+        }
+        .content-card {
+            background-color: var(--card-color);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            border: 1px solid rgba(255, 119, 0, 0.1);
+        }
+        .glow-button { 
+            background: transparent; 
+            border: 2px solid var(--glow-color); 
+            color: var(--glow-color); 
+            text-shadow: 0 0 5px var(--glow-color); 
+            box-shadow: 0 0 10px rgba(255, 119, 0, 0.5), inset 0 0 10px rgba(255, 119, 0, 0.3); 
+            transition: all 0.3s ease; 
+        }
+        .glow-button:hover { 
+            background: var(--glow-color); 
+            color: #000; 
+            text-shadow: none; 
+            box-shadow: 0 0 20px rgba(255, 119, 0, 0.8), 0 0 30px rgba(255, 119, 0, 0.6); 
+        }
+        .loader { width: 50px; height: 50px; border: 5px solid #555; border-top-color: var(--glow-color); border-radius: 50%; animation: spin 1s linear infinite; box-shadow: 0 0 15px var(--glow-color); }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="h-screen">
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="fixed inset-0 bg-[#282828] flex items-center justify-center z-50">
+        <div class="loader"></div>
+    </div>
+
+    <div id="app-content" class="hidden flex w-full h-full">
+        <!-- Sidebar & Mobile Menu Button -->
+        <button id="menu-open-btn" class="md:hidden fixed top-6 left-6 z-30 text-white bg-black/20 p-2 rounded-md"><i class="fas fa-bars text-xl"></i></button>
+        <aside id="sidebar" class="fixed md:relative inset-y-0 left-0 w-64 bg-black/30 backdrop-blur-sm p-6 flex flex-col z-40 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out">
+            <button id="menu-close-btn" class="md:hidden absolute top-6 right-6 text-white"><i class="fas fa-times text-2xl"></i></button>
+            <div class="flex items-center gap-4 mt-8 md:mt-0">
+                <i class="fas fa-user-circle text-4xl text-gray-400"></i>
+                <div>
+                    <h2 id="user-name-sidebar" class="font-bold text-lg text-white"></h2>
+                    <a href="#" class="text-sm text-gray-400 hover:text-orange-400">Seu Perfil</a>
+                </div>
+            </div>
+            <nav class="mt-10 flex flex-col gap-4">
+                <a href="./home.html" class="text-lg font-semibold hover:text-orange-400 transition-colors">Painel</a>
+                <a href="./cadastrar-caminhada.html" class="text-lg font-semibold hover:text-orange-400 transition-colors">Cadastrar Caminhada</a>
+                <a href="./minhas-caminhadas.html" class="text-lg font-semibold hover:text-orange-400 transition-colors">Ver Caminhadas</a>
+                <a href="./graficos.html" class="text-lg font-semibold text-orange-400 transition-colors">Gráficos</a>
+            </nav>
+            <div class="mt-auto">
+                <button id="logout-btn" class="w-full flex items-center justify-center gap-3 px-4 py-3 font-semibold rounded-lg text-red-500 hover:bg-red-500 hover:text-white transition-colors"><i class="fas fa-sign-out-alt"></i> Logout</button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 p-4 md:p-8 overflow-y-auto">
+            <div class="w-full max-w-6xl mx-auto">
+                <div class="flex justify-between items-center mb-8">
+                    <div class="text-center md:text-left">
+                        <h1 class="text-4xl font-bold tracking-wider text-white">Gráficos de Performance</h1>
+                        <p class="text-orange-400">Analise sua evolução ao longo do tempo.</p>
+                    </div>
+                    <a href="./home.html" class="hidden md:inline-block px-6 py-2 font-semibold rounded-lg glow-button uppercase tracking-wider">
+                        Voltar
+                    </a>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Weekly Distance Chart -->
+                    <div class="content-card">
+                        <h3 class="text-lg font-bold text-white mb-4">Distância nos Últimos 7 Dias (km)</h3>
+                        <canvas id="weeklyDistanceChart"></canvas>
+                    </div>
+
+                    <!-- Recent Workouts Duration Chart -->
+                    <div class="content-card">
+                        <h3 class="text-lg font-bold text-white mb-4">Duração dos Últimos Treinos (minutos)</h3>
+                        <canvas id="recentDurationChart"></canvas>
+                    </div>
+
+                    <!-- Monthly Calories Chart -->
+                    <div class="content-card">
+                        <h3 class="text-lg font-bold text-white mb-4">Calorias Queimadas por Mês</h3>
+                        <canvas id="monthlyCaloriesChart"></canvas>
+                    </div>
+                    
+                    <!-- Monthly Distance Chart -->
+                    <div class="content-card">
+                        <h3 class="text-lg font-bold text-white mb-4">Distância Total por Mês (km)</h3>
+                        <div class="max-w-md mx-auto">
+                            <canvas id="monthlyDistancePieChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="no-data-message" class="hidden text-center content-card mt-6">
+                    <p class="text-gray-400">Não há dados suficientes para gerar os gráficos.</p>
+                    <p class="text-gray-500 text-sm">Comece registrando algumas caminhadas!</p>
+                </div>
+
+                <div class="text-center mt-8 md:hidden">
+                     <a href="./home.html" class="inline-block px-8 py-3 font-semibold rounded-lg glow-button uppercase tracking-wider">
+                        Voltar
+                    </a>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script type="module">
+        import { auth, database } from './firebase.js';
+        import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { ref, get } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
+
+        const loadingOverlay = document.getElementById('loading-overlay');
+        const appContent = document.getElementById('app-content');
+        const noDataMessage = document.getElementById('no-data-message');
+        const sidebar = document.getElementById('sidebar');
+        const menuOpenBtn = document.getElementById('menu-open-btn');
+        const menuCloseBtn = document.getElementById('menu-close-btn');
+        const userNameSidebar = document.getElementById('user-name-sidebar');
+        const logoutBtn = document.getElementById('logout-btn');
+
+        // Menu Logic
+        menuOpenBtn.addEventListener('click', () => { sidebar.classList.remove('-translate-x-full'); menuOpenBtn.classList.add('hidden'); });
+        menuCloseBtn.addEventListener('click', () => { sidebar.classList.add('-translate-x-full'); menuOpenBtn.classList.remove('hidden'); });
+        logoutBtn.addEventListener('click', () => signOut(auth));
+
+        // Chart.js Global Config
+        Chart.defaults.color = '#E0E0E0';
+        Chart.defaults.borderColor = 'rgba(255, 119, 0, 0.2)';
+        Chart.defaults.font.family = "'Chakra Petch', sans-serif";
+
+        const processChartData = (walks) => {
+            const walksArray = Object.values(walks).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+            const now = new Date();
+            const currentYear = now.getFullYear();
+            const monthNames = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+
+            // --- 1. Weekly Distance Data ---
+            const last7DaysLabels = [];
+            const last7DaysDistance = [];
+            for (let i = 6; i >= 0; i--) {
+                const d = new Date();
+                d.setDate(d.getDate() - i);
+                const dateString = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+                last7DaysLabels.push(`${d.getDate()}/${d.getMonth() + 1}`);
+                const walksOnDay = walksArray.filter(w => w.date === dateString);
+                last7DaysDistance.push(walksOnDay.reduce((sum, w) => sum + w.distance, 0));
+            }
+
+            // --- 2. Recent Workouts Duration Data ---
+            const recentWalks = walksArray.slice(0, 6).reverse();
+            const recentDurationLabels = recentWalks.map(w => {
+                const [y, m, d] = w.date.split('-');
+                return `${d}/${m}`;
+            });
+            const recentDurationData = recentWalks.map(w => {
+                const parts = w.duration.split(':');
+                return (+parts[0] * 60) + (+parts[1]) + (+parts[2] / 60);
+            });
+
+            // --- 3. Monthly Data ---
+            const monthlyCalories = Array(12).fill(0);
+            const monthlyDistance = {};
+            walksArray.forEach(walk => {
+                const walkDate = new Date(walk.date);
+                if (walkDate.getFullYear() === currentYear) {
+                    monthlyCalories[walkDate.getMonth()] += walk.calories;
+                }
+                const monthYear = `${monthNames[walkDate.getMonth()]} ${walkDate.getFullYear()}`;
+                if (!monthlyDistance[monthYear]) monthlyDistance[monthYear] = 0;
+                monthlyDistance[monthYear] += walk.distance;
+            });
+
+            return { last7DaysLabels, last7DaysDistance, recentDurationLabels, recentDurationData, monthNames, monthlyCalories, monthlyDistance };
+        };
+
+        const createCharts = (data) => {
+            const { last7DaysLabels, last7DaysDistance, recentDurationLabels, recentDurationData, monthNames, monthlyCalories, monthlyDistance } = data;
+            const glowColor = '#FF7700';
+            const barChartOptions = { scales: { y: { beginAtZero: true } }, plugins: { legend: { display: false } } };
+
+            new Chart(document.getElementById('weeklyDistanceChart'), {
+                type: 'line',
+                data: {
+                    labels: last7DaysLabels,
+                    datasets: [{ data: last7DaysDistance, borderColor: glowColor, backgroundColor: 'rgba(255, 119, 0, 0.2)', fill: true, tension: 0.4 }]
+                },
+                options: { plugins: { legend: { display: false } } }
+            });
+
+            new Chart(document.getElementById('recentDurationChart'), {
+                type: 'bar',
+                data: {
+                    labels: recentDurationLabels,
+                    datasets: [{ data: recentDurationData, backgroundColor: '#3399FF' }]
+                },
+                options: barChartOptions
+            });
+
+            new Chart(document.getElementById('monthlyCaloriesChart'), {
+                type: 'bar',
+                data: {
+                    labels: monthNames,
+                    datasets: [{ data: monthlyCalories, backgroundColor: glowColor }]
+                },
+                options: barChartOptions
+            });
+            
+            new Chart(document.getElementById('monthlyDistancePieChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(monthlyDistance),
+                    datasets: [{ data: Object.values(monthlyDistance), backgroundColor: ['#FF7700', '#FF9933', '#FFB366', '#FFCC99', '#E66A00', '#CC5E00'] }]
+                },
+                options: { plugins: { legend: { position: 'bottom' } } }
+            });
+        };
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                const userRef = ref(database, 'users/' + user.uid);
+                const snapshot = await get(userRef);
+                if (snapshot.exists()) {
+                    const userData = snapshot.val();
+                    userNameSidebar.textContent = `${userData.firstName || ''} ${userData.lastName || ''}`.trim();
+                    if (userData.walks && Object.keys(userData.walks).length > 0) {
+                        const chartData = processChartData(userData.walks);
+                        createCharts(chartData);
+                    } else {
+                        noDataMessage.classList.remove('hidden');
+                    }
+                }
+                loadingOverlay.classList.add('hidden');
+                appContent.classList.remove('hidden');
+            } else {
+                window.location.href = './index.html';
+            }
+        });
+    </script>
+
+</body>
+</html>

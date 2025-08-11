@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RunAWay</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" type="image/png" href="logo.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root { 
+            --glow-color: #FF7700; 
+            --background-color: #282828;
+            --card-color: #333333;
+            --text-color: #E0E0E0;
+        }
+        html, body {
+            height: 100%;
+        }
+        body { 
+            font-family: 'Chakra Petch', sans-serif; 
+            background-color: var(--background-color); 
+            color: var(--text-color); 
+        }
+        .glow-text {
+            color: var(--glow-color);
+            text-shadow: 0 0 5px var(--glow-color);
+        }
+        .content-card {
+            background-color: var(--card-color);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            border: 1px solid rgba(255, 119, 0, 0.1);
+        }
+        .xp-bar-container {
+            background-color: #444;
+            border-radius: 9999px;
+            height: 1rem;
+            overflow: hidden;
+            border: 1px solid rgba(255, 119, 0, 0.2);
+        }
+        .xp-bar-fill {
+            background-color: var(--glow-color);
+            height: 100%;
+            border-radius: 9999px;
+            box-shadow: 0 0 10px var(--glow-color);
+            transition: width 0.5s ease-in-out;
+        }
+        .action-button {
+            background-color: var(--glow-color);
+            color: var(--background-color);
+            border-radius: 0.75rem;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .action-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(255, 119, 0, 0.8);
+        }
+        /* --- Calendar Styles --- */
+        .calendar-day {
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 0.5rem;
+            transition: all 0.2s ease;
+            position: relative;
+            cursor: pointer;
+        }
+        .calendar-day:not(.other-month):hover {
+            background-color: rgba(255,255,255,0.1);
+        }
+        .calendar-day.other-month {
+            color: #666;
+            cursor: default;
+        }
+        .calendar-day.today {
+            border: 2px solid var(--glow-color);
+        }
+        .calendar-day.has-walk {
+            background-color: var(--glow-color);
+            color: #111;
+            font-weight: bold;
+            box-shadow: 0 0 10px var(--glow-color);
+        }
+        #walk-popover {
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            width: 280px;
+            pointer-events: none; /* Allow clicks to pass through to calendar */
+        }
+    </style>
+</head>
+<body class="h-screen">
+
+    <!-- App Container -->
+    <div id="app-content" class="flex w-full h-full">
+        <!-- Sidebar & Mobile Menu Button -->
+        <button id="menu-open-btn" class="md:hidden fixed top-6 left-6 z-50 text-white bg-black/20 p-2 rounded-md"><i class="fas fa-bars text-xl"></i></button>
+        <aside id="sidebar" class="fixed md:relative inset-y-0 left-0 w-64 bg-black/30 backdrop-blur-sm p-6 flex flex-col z-40 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out">
+            <button id="menu-close-btn" class="md:hidden absolute top-6 right-6 text-white"><i class="fas fa-times text-2xl"></i></button>
+            <div class="flex items-center gap-4 mt-8 md:mt-0">
+                <i class="fas fa-user-circle text-4xl text-gray-400"></i>
+                <div>
+                    <h2 id="user-name-sidebar" class="font-bold text-lg text-white">Carregando...</h2>
+                    <a href="#" class="text-sm text-gray-400 hover:text-orange-400">Seu Perfil</a>
+                </div>
+            </div>
+            <nav class="mt-10 flex flex-col gap-4">
+                <a href="./home.html" class="text-lg font-semibold text-orange-400 transition-colors">Painel</a>
+                <a href="./cadastrar-caminhada.html" class="text-lg font-semibold hover:text-orange-400 transition-colors">Cadastrar Caminhada</a>
+                <a href="./minhas-caminhadas.html" class="text-lg font-semibold hover:text-orange-400 transition-colors">Ver Caminhadas</a>
+                <a href="./graficos.html" class="text-lg font-semibold hover:text-orange-400 transition-colors">Gráficos</a>
+            </nav>
+            <div class="mt-auto">
+                <button id="logout-btn" class="w-full flex items-center justify-center gap-3 px-4 py-3 font-semibold rounded-lg text-red-500 hover:bg-red-500 hover:text-white transition-colors"><i class="fas fa-sign-out-alt"></i> Logout</button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 p-6 md:p-10 overflow-y-auto">
+            <header class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <h1 class="text-5xl font-bold tracking-wider text-white hidden md:block">RunAWay</h1>
+                <div class="w-full md:w-72 mt-12 md:mt-0">
+                    <div class="flex justify-between items-center mb-1">
+                        <span id="level-display" class="font-semibold text-white">Nível 1</span>
+                        <span id="xp-display" class="text-sm text-gray-400">(0/100)</span>
+                    </div>
+                    <div class="xp-bar-container"><div id="xp-bar-fill" class="xp-bar-fill" style="width: 0%;"></div></div>
+                </div>
+            </header>
+
+            <p class="mt-6 text-xl text-gray-300">Bem vindo <span id="user-name-main" class="font-bold text-white">...</span></p>
+            
+            <!-- Motivational Card -->
+            <div class="mt-8 content-card">
+                <h3 class="font-bold text-orange-400 text-lg">Motivacional</h3>
+                <p class="mt-2 text-gray-300">Você está esperando algo da vida? Talvez ela que esteja esperando algo de você.</p>
+            </div>
+
+            <!-- Dashboard Grid -->
+            <div class="mt-8 grid grid-cols-1 lg:grid-cols-4 gap-6">
+                
+                <!-- Calendar -->
+                <div class="lg:col-span-2 content-card">
+                    <div id="calendar-header" class="flex justify-between items-center mb-4">
+                        <button id="prev-month-btn" class="p-2 rounded-full hover:bg-white/10 transition-colors"><i class="fas fa-chevron-left"></i></button>
+                        <h3 id="month-year-display" class="text-xl font-bold text-white uppercase tracking-wider"></h3>
+                        <button id="next-month-btn" class="p-2 rounded-full hover:bg-white/10 transition-colors"><i class="fas fa-chevron-right"></i></button>
+                    </div>
+                    <div class="grid grid-cols-7 gap-1 text-center font-semibold text-gray-400 mb-2">
+                        <div>Dom</div><div>Seg</div><div>Ter</div><div>Qua</div><div>Qui</div><div>Sex</div><div>Sáb</div>
+                    </div>
+                    <div id="calendar-grid" class="grid grid-cols-7 gap-1">
+                        <!-- Day cells will be generated by JS -->
+                    </div>
+                </div>
+
+                <!-- Cadastrar Caminhada -->
+                <div class="content-card flex flex-col items-center justify-center text-center">
+                     <h3 class="font-bold text-white text-lg">Cadastrar Caminhada</h3>
+                     <p class="text-sm text-gray-400 mt-1">Adicione um novo registro de atividade.</p>
+                     <a href="./cadastrar-caminhada.html" class="w-24 h-24 mt-4 action-button">
+                        <i class="fas fa-plus text-5xl font-black"></i>
+                     </a>
+                </div>
+
+                <!-- Resumo do Mês -->
+                <div class="content-card flex flex-col justify-between">
+                    <h3 class="font-bold text-white text-lg">RESUMO DO MÊS</h3>
+                    <div class="flex justify-between items-end">
+                        <div>
+                            <p class="text-gray-400">Dias caminhados no mês <span id="summary-days" class="block text-2xl font-bold text-white">0</span></p>
+                            <p class="text-gray-400 mt-3">Calorias perdidas <span id="summary-calories" class="block text-2xl font-bold text-white">0</span></p>
+                            <p class="text-gray-400 mt-3">Kilometros andados <span id="summary-km" class="block text-2xl font-bold text-white">0</span></p>
+                        </div>
+                        <div><i id="fire-icon" class="fas fa-fire text-8xl text-gray-600 transition-colors"></i></div>
+                    </div>
+                </div>
+                
+                <!-- Ultimas Caminhadas -->
+                <div class="lg:col-span-4 content-card">
+                    <div class="flex justify-between items-center">
+                        <h3 class="font-bold text-white text-lg">Últimas Caminhadas</h3>
+                        <a href="./minhas-caminhadas.html" class="text-sm font-semibold text-orange-400 hover:underline">Ver mais</a>
+                    </div>
+                    <div id="walks-container" class="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <!-- Cards de caminhada serão inseridos aqui -->
+                    </div>
+                    <div id="no-walks-message" class="hidden mt-4 text-center py-8">
+                        <p class="text-gray-400">Nenhuma caminhada registrada ainda.</p>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+        
+        <!-- Popover for walk details -->
+        <div id="walk-popover" class="hidden absolute z-20 p-4 content-card"></div>
+    </div>
+
+    <script type="module">
+        import { auth, database } from './firebase.js';
+        import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { ref, get } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
+
+        // --- UI Elements ---
+        const appContent = document.getElementById('app-content');
+        const userNameSidebar = document.getElementById('user-name-sidebar');
+        const userNameMain = document.getElementById('user-name-main');
+        const logoutBtn = document.getElementById('logout-btn');
+        const levelDisplay = document.getElementById('level-display');
+        const xpDisplay = document.getElementById('xp-display');
+        const xpBarFill = document.getElementById('xp-bar-fill');
+        const summaryDays = document.getElementById('summary-days');
+        const summaryCalories = document.getElementById('summary-calories');
+        const summaryKm = document.getElementById('summary-km');
+        const fireIcon = document.getElementById('fire-icon');
+        const sidebar = document.getElementById('sidebar');
+        const menuOpenBtn = document.getElementById('menu-open-btn');
+        const menuCloseBtn = document.getElementById('menu-close-btn');
+        const walksContainer = document.getElementById('walks-container');
+        const noWalksMessage = document.getElementById('no-walks-message');
+
+        // --- Calendar Elements ---
+        const calendarGrid = document.getElementById('calendar-grid');
+        const monthYearDisplay = document.getElementById('month-year-display');
+        const prevMonthBtn = document.getElementById('prev-month-btn');
+        const nextMonthBtn = document.getElementById('next-month-btn');
+        const walkPopover = document.getElementById('walk-popover');
+        
+        let currentDate = new Date();
+        let allUserWalks = {};
+
+        // --- Menu Logic ---
+        menuOpenBtn.addEventListener('click', () => { sidebar.classList.remove('-translate-x-full'); menuOpenBtn.classList.add('hidden'); });
+        menuCloseBtn.addEventListener('click', () => { sidebar.classList.add('-translate-x-full'); menuOpenBtn.classList.remove('hidden'); });
+
+        // --- Helper Functions ---
+        const getXpForNextLevel = (level) => level <= 0 ? 100 : 100 * Math.pow(2, level - 1);
+
+        // --- Calendar Logic ---
+        const renderCalendar = () => {
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+            monthYearDisplay.textContent = `${currentDate.toLocaleString('pt-BR', { month: 'long' })} ${year}`;
+            calendarGrid.innerHTML = '';
+
+            const firstDayOfMonth = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            const today = new Date();
+
+            for (let i = 0; i < firstDayOfMonth; i++) {
+                calendarGrid.innerHTML += `<div class="calendar-day other-month"></div>`;
+            }
+
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const dayDiv = document.createElement('div');
+                dayDiv.className = 'calendar-day';
+                dayDiv.textContent = day;
+                dayDiv.dataset.date = dateString;
+
+                if (year === today.getFullYear() && month === today.getMonth() && day === today.getDate()) {
+                    dayDiv.classList.add('today');
+                }
+                if (allUserWalks[dateString]) {
+                    dayDiv.classList.add('has-walk');
+                }
+                calendarGrid.appendChild(dayDiv);
+            }
+        };
+
+        prevMonthBtn.addEventListener('click', () => { currentDate.setMonth(currentDate.getMonth() - 1); renderCalendar(); });
+        nextMonthBtn.addEventListener('click', () => { currentDate.setMonth(currentDate.getMonth() + 1); renderCalendar(); });
+
+        // --- Popover and Click Logic ---
+        calendarGrid.addEventListener('mouseover', (e) => {
+            const dayElement = e.target.closest('.calendar-day');
+            if (dayElement && dayElement.classList.contains('has-walk')) {
+                const date = dayElement.dataset.date;
+                const walksOnDay = allUserWalks[date];
+                
+                const totalKm = walksOnDay.reduce((sum, walk) => sum + walk.distance, 0);
+                const totalCalories = walksOnDay.reduce((sum, walk) => sum + walk.calories, 0);
+                const totalXp = walksOnDay.reduce((sum, walk) => sum + walk.xpGained, 0);
+                const [y, m, d] = date.split('-');
+
+                walkPopover.innerHTML = `
+                    <p class="font-bold text-white text-lg border-b border-gray-600 pb-2 mb-2">${d}/${m}/${y}</p>
+                    <p class="text-sm text-gray-300">Distância: <span class="font-bold text-white">${totalKm.toFixed(2)} km</span></p>
+                    <p class="text-sm text-gray-300">Calorias: <span class="font-bold text-white">${totalCalories}</span></p>
+                    <p class="text-sm glow-text">XP Ganho: <span class="font-bold">+${totalXp}</span></p>
+                `;
+                
+                const rect = dayElement.getBoundingClientRect();
+                walkPopover.style.left = `${rect.left + window.scrollX}px`;
+                walkPopover.style.top = `${rect.bottom + window.scrollY + 5}px`;
+                walkPopover.classList.remove('hidden');
+            }
+        });
+        calendarGrid.addEventListener('mouseout', (e) => {
+             const dayElement = e.target.closest('.calendar-day');
+             if(dayElement) {
+                walkPopover.classList.add('hidden')
+             };
+        });
+        
+        calendarGrid.addEventListener('click', (e) => {
+            const dayElement = e.target.closest('.calendar-day');
+            if (dayElement && !dayElement.classList.contains('other-month')) {
+                const date = dayElement.dataset.date;
+                window.location.href = `./cadastrar-caminhada.html?date=${date}`;
+            }
+        });
+
+
+        // --- Main Dashboard Logic ---
+        const renderRecentWalksCards = (walks) => {
+            walksContainer.innerHTML = '';
+            const walksArray = Object.values(walks).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+            const recentWalks = walksArray.slice(0, 3);
+
+            recentWalks.forEach(walk => {
+                const [year, month, day] = walk.date.split('-');
+                const formattedDate = `${day}/${month}/${year}`;
+                const card = `
+                    <div class="bg-black/20 p-4 rounded-lg">
+                        <p class="font-bold text-white">${formattedDate}</p>
+                        <p class="text-sm text-gray-400 mt-2">Duração <span class="block text-white font-semibold">${walk.duration}</span></p>
+                        <p class="text-sm text-gray-400 mt-2">Distância (km) <span class="block text-white font-semibold">${walk.distance.toFixed(2)}</span></p>
+                        <p class="text-sm text-gray-400 mt-2">Calorias <span class="block text-white font-semibold">${walk.calories}</span></p>
+                        <p class="mt-2 font-bold glow-text">+${walk.xpGained}XP</p>
+                    </div>
+                `;
+                walksContainer.innerHTML += card;
+            });
+        };
+
+        const calculateMonthSummary = (walks) => {
+            const now = new Date();
+            const currentMonth = now.getMonth();
+            const currentYear = now.getFullYear();
+
+            const walksThisMonth = Object.values(walks).filter(walk => {
+                const walkDate = new Date(walk.date);
+                return walkDate.getMonth() === currentMonth && walkDate.getFullYear() === currentYear;
+            });
+
+            if (walksThisMonth.length > 0) {
+                const totalKm = walksThisMonth.reduce((sum, walk) => sum + walk.distance, 0);
+                const totalCalories = walksThisMonth.reduce((sum, walk) => sum + walk.calories, 0);
+                const uniqueDays = new Set(walksThisMonth.map(walk => walk.date)).size;
+
+                summaryKm.textContent = totalKm.toFixed(2);
+                summaryCalories.textContent = totalCalories;
+                summaryDays.textContent = uniqueDays;
+                
+                fireIcon.classList.replace('text-gray-600', 'text-orange-500');
+                fireIcon.style.textShadow = '0 0 20px var(--glow-color)';
+            } else {
+                summaryKm.textContent = '0';
+                summaryCalories.textContent = '0';
+                summaryDays.textContent = '0';
+                fireIcon.classList.replace('text-orange-500', 'text-gray-600');
+                fireIcon.style.textShadow = 'none';
+            }
+        };
+
+        const updateDashboard = (userData) => {
+            const fullName = `${userData.firstName || ''} ${userData.lastName || ''}`.trim();
+            userNameSidebar.textContent = fullName || 'Agente';
+            userNameMain.textContent = fullName || 'Agente';
+
+            const level = userData.lvl || 1;
+            const currentXp = userData.xp || 0;
+            const xpForNextLevel = getXpForNextLevel(level);
+            xpDisplay.textContent = `(${currentXp}/${xpForNextLevel})`;
+            levelDisplay.textContent = `Nível ${level}`;
+            xpBarFill.style.width = `${(currentXp / xpForNextLevel) * 100}%`;
+
+            const walks = userData.walks || {};
+            
+            allUserWalks = {};
+            for (const key in walks) {
+                const walk = walks[key];
+                if (!allUserWalks[walk.date]) allUserWalks[walk.date] = [];
+                allUserWalks[walk.date].push(walk);
+            }
+            
+            if (Object.keys(walks).length > 0) {
+                walksContainer.classList.remove('hidden');
+                noWalksMessage.classList.add('hidden');
+                renderRecentWalksCards(walks);
+            } else {
+                walksContainer.classList.add('hidden');
+                noWalksMessage.classList.remove('hidden');
+            }
+
+            renderCalendar();
+            calculateMonthSummary(walks);
+        };
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                const userRef = ref(database, 'users/' + user.uid);
+                const snapshot = await get(userRef);
+                if (snapshot.exists()) {
+                    updateDashboard(snapshot.val());
+                } else {
+                    window.location.href = './index.html';
+                }
+            } else {
+                window.location.href = './index.html';
+            }
+        });
+
+        logoutBtn.addEventListener('click', () => signOut(auth).catch(error => console.error("Logout Error:", error)));
+    </script>
+</body>
+</html>

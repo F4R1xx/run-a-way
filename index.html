@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RunAWay</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" type="image/png" href="logo.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        :root { --glow-color: #FF7700; }
+        body { font-family: 'Chakra Petch', sans-serif; background-color: #282828; color: #E0E0E0; }
+        body::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-image: linear-gradient(to right, rgba(255, 119, 0, 0.1) 1px, transparent 1px), linear-gradient(to bottom, rgba(255, 119, 0, 0.1) 1px, transparent 1px); background-size: 40px 40px; animation: pan-background 60s linear infinite; z-index: -1; }
+        @keyframes pan-background { 0% { background-position: 0 0; } 100% { background-position: 1200px 1200px; } }
+        .glass-container { background: rgba(10, 10, 10, 0.6); backdrop-filter: blur(10px); border: 1px solid rgba(255, 119, 0, 0.2); box-shadow: 0 0 15px rgba(255, 119, 0, 0.2), 0 0 30px rgba(255, 119, 0, 0.1); animation: float-in 1s ease-out forwards; }
+        @keyframes float-in { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        .futuristic-input { background: transparent; border: none; border-bottom: 1px solid rgba(255, 119, 0, 0.3); color: var(--glow-color); transition: all 0.3s ease; }
+        .futuristic-input:focus { outline: none; border-bottom-color: var(--glow-color); box-shadow: 0 5px 15px -10px var(--glow-color); }
+        .futuristic-select { -webkit-appearance: none; -moz-appearance: none; appearance: none; background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23FF7700%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22/%3E%3C/svg%3E'); background-repeat: no-repeat; background-position: right 0.7rem top 50%; background-size: 0.65rem auto; }
+        .futuristic-select option { background: #111; color: var(--glow-color); }
+        .glow-button { background: transparent; border: 2px solid var(--glow-color); color: var(--glow-color); text-shadow: 0 0 5px var(--glow-color); box-shadow: 0 0 10px rgba(255, 119, 0, 0.5), inset 0 0 10px rgba(255, 119, 0, 0.3); transition: all 0.3s ease; }
+        .glow-button:hover { background: var(--glow-color); color: #000; text-shadow: none; box-shadow: 0 0 20px rgba(255, 119, 0, 0.8), 0 0 30px rgba(255, 119, 0, 0.6); }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: rgba(255, 119, 0, 0.1); }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background-color: var(--glow-color); border-radius: 6px; }
+        /* Loader Styles */
+        .loader { width: 50px; height: 50px; border: 5px solid #555; border-top-color: var(--glow-color); border-radius: 50%; animation: spin 1s linear infinite; box-shadow: 0 0 15px var(--glow-color); }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="hidden fixed inset-0 bg-[#282828]/80 backdrop-blur-sm flex items-center justify-center z-50">
+        <div class="loader"></div>
+    </div>
+
+    <!-- Container Principal -->
+    <div id="main-container" class="w-full max-w-md p-8 space-y-4 rounded-2xl glass-container">
+        <div class="text-center">
+            <i class="fas fa-running text-4xl" style="color: var(--glow-color); text-shadow: 0 0 10px var(--glow-color);"></i>
+            <h1 class="text-3xl font-bold text-white mt-2 tracking-widest">RunAWay</h1>
+            <p id="form-title" class="text-orange-400 uppercase tracking-wider">Acessar Plataforma</p>
+        </div>
+        
+        <button id="google-login-btn" class="w-full flex items-center justify-center gap-3 px-4 py-3 font-semibold rounded-lg glow-button uppercase tracking-wider">
+            <i class="fab fa-google"></i> Conectar com Google
+        </button>
+
+        <div class="flex items-center text-gray-400">
+            <hr class="flex-grow border-t border-gray-600"/>
+            <span class="px-3 text-xs uppercase">Ou</span>
+            <hr class="flex-grow border-t border-gray-600"/>
+        </div>
+
+        <!-- Formulário de Login -->
+        <form id="login-form" class="space-y-6">
+            <div>
+                <label for="login-email" class="text-sm font-medium text-orange-400">ID de Usuário (Email)</label>
+                <input id="login-email" type="email" required class="w-full px-4 py-2 mt-1 futuristic-input">
+            </div>
+            <div>
+                <label for="login-password" class="text-sm font-medium text-orange-400">Senha de Acesso</label>
+                <input id="login-password" type="password" required class="w-full px-4 py-2 mt-1 futuristic-input">
+            </div>
+            <div>
+                <button type="submit" class="w-full px-4 py-3 mt-2 font-semibold rounded-lg glow-button uppercase tracking-wider">
+                    Conectar
+                </button>
+            </div>
+            <div class="text-center pt-2">
+                <p class="text-sm text-gray-400">
+                    Não possui registro?
+                    <a href="#" id="toggle-to-register" class="font-medium text-orange-400 hover:text-white hover:underline transition-colors">Criar Acesso</a>
+                </p>
+            </div>
+        </form>
+
+        <!-- Formulário de Cadastro (Oculto) -->
+        <form id="register-form" class="hidden space-y-6">
+            <div>
+                <label for="register-email" class="text-sm font-medium text-orange-400">Seu Email</label>
+                <input id="register-email" type="email" required class="w-full px-4 py-2 mt-1 futuristic-input">
+            </div>
+            <div>
+                <label for="register-password" class="text-sm font-medium text-orange-400">Crie uma Senha</label>
+                <input id="register-password" type="password" required class="w-full px-4 py-2 mt-1 futuristic-input">
+            </div>
+             <div>
+                <label for="register-confirm-password" class="text-sm font-medium text-orange-400">Confirme a Senha</label>
+                <input id="register-confirm-password" type="password" required class="w-full px-4 py-2 mt-1 futuristic-input">
+            </div>
+            <div>
+                <button type="submit" class="w-full px-4 py-3 mt-2 font-semibold rounded-lg glow-button uppercase tracking-wider">
+                    Registrar
+                </button>
+            </div>
+            <div class="text-center pt-2">
+                <p class="text-sm text-gray-400">
+                    Já possui acesso?
+                    <a href="#" id="toggle-to-login" class="font-medium text-orange-400 hover:text-white hover:underline transition-colors">Conectar</a>
+                </p>
+            </div>
+        </form>
+    </div>
+
+    <!-- Modal para Completar Perfil (inicialmente oculto) -->
+    <div id="complete-profile-modal" class="hidden fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-40">
+        <div class="w-full max-w-lg p-8 space-y-4 rounded-2xl glass-container">
+            <h2 class="text-2xl font-bold text-white tracking-widest text-center">Finalizar Registro</h2>
+            <p class="text-center text-gray-400">Detectamos que este é seu primeiro acesso. Por favor, complete seu perfil.</p>
+            <form id="complete-profile-form" class="space-y-3 custom-scrollbar" style="max-height: 60vh; overflow-y: auto; padding-right: 1rem;">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="profile-firstName" class="text-sm font-medium text-orange-400">Nome</label>
+                        <input id="profile-firstName" type="text" required class="w-full px-4 py-2 mt-1 futuristic-input">
+                    </div>
+                    <div>
+                        <label for="profile-lastName" class="text-sm font-medium text-orange-400">Sobrenome</label>
+                        <input id="profile-lastName" type="text" required class="w-full px-4 py-2 mt-1 futuristic-input">
+                    </div>
+                </div>
+                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="profile-age" class="text-sm font-medium text-orange-400">Idade</label>
+                        <input id="profile-age" type="number" required class="w-full px-4 py-2 mt-1 futuristic-input">
+                    </div>
+                    <div>
+                        <label for="profile-gender" class="text-sm font-medium text-orange-400">Gênero</label>
+                        <select id="profile-gender" required class="w-full px-4 py-2 mt-1 futuristic-input futuristic-select">
+                            <option value="" disabled selected>Selecionar...</option>
+                            <option value="masculino">Masculino</option>
+                            <option value="feminino">Feminino</option>
+                            <option value="outro">Outro</option>
+                            <option value="nao-informar">Prefiro não informar</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="profile-weight" class="text-sm font-medium text-orange-400">Peso (kg)</label>
+                        <input id="profile-weight" type="number" step="0.1" required class="w-full px-4 py-2 mt-1 futuristic-input">
+                    </div>
+                    <div>
+                        <label for="profile-height" class="text-sm font-medium text-orange-400">Altura (cm)</label>
+                        <input id="profile-height" type="number" required class="w-full px-4 py-2 mt-1 futuristic-input">
+                    </div>
+                </div>
+                <div>
+                    <button type="submit" class="w-full px-4 py-3 mt-4 font-semibold rounded-lg glow-button uppercase tracking-wider">
+                        Salvar e Entrar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <div id="message-area" class="hidden fixed bottom-5 right-5 text-sm font-medium p-4 rounded-lg z-50 glass-container"></div>
+
+
+    <script type="module">
+        import { auth, database, googleProvider } from './firebase.js';
+        import { signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { ref, set, get } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
+
+        // --- Elementos da UI ---
+        const mainContainer = document.getElementById('main-container');
+        const googleLoginBtn = document.getElementById('google-login-btn');
+        const loginForm = document.getElementById('login-form');
+        const registerForm = document.getElementById('register-form');
+        const completeProfileModal = document.getElementById('complete-profile-modal');
+        const completeProfileForm = document.getElementById('complete-profile-form');
+        const messageArea = document.getElementById('message-area');
+        const toggleToRegister = document.getElementById('toggle-to-register');
+        const toggleToLogin = document.getElementById('toggle-to-login');
+        const formTitle = document.getElementById('form-title');
+        const loadingOverlay = document.getElementById('loading-overlay');
+        
+        let currentUser = null;
+
+        // --- Funções Auxiliares ---
+        const showLoader = () => loadingOverlay.classList.remove('hidden');
+        const hideLoader = () => loadingOverlay.classList.add('hidden');
+
+        const showMessage = (message, isError = false) => {
+            messageArea.textContent = message;
+            messageArea.classList.remove('hidden');
+            messageArea.style.borderColor = isError ? '#ff4b4b' : 'var(--glow-color)';
+            messageArea.style.color = isError ? '#ff4b4b' : 'var(--glow-color)';
+            setTimeout(() => messageArea.classList.add('hidden'), 4000);
+        };
+
+        const handleAuthSuccess = async (user, providerId) => {
+            currentUser = user;
+            const userRef = ref(database, 'users/' + user.uid);
+            const snapshot = await get(userRef);
+
+            if (snapshot.exists()) {
+                window.location.href = './home.html';
+            } else {
+                mainContainer.classList.add('hidden');
+                completeProfileModal.classList.remove('hidden');
+                hideLoader();
+                
+                if (providerId === 'google.com' && user.displayName) {
+                    const [firstName, ...lastNameParts] = user.displayName.split(' ');
+                    document.getElementById('profile-firstName').value = firstName;
+                    document.getElementById('profile-lastName').value = lastNameParts.join(' ');
+                }
+            }
+        };
+        
+        // --- Lógica de Autenticação ---
+        toggleToRegister.addEventListener('click', (e) => {
+            e.preventDefault();
+            loginForm.classList.add('hidden');
+            registerForm.classList.remove('hidden');
+            formTitle.textContent = "Criar Acesso";
+        });
+
+        toggleToLogin.addEventListener('click', (e) => {
+            e.preventDefault();
+            registerForm.classList.add('hidden');
+            loginForm.classList.remove('hidden');
+            formTitle.textContent = "Acessar Plataforma";
+        });
+
+        googleLoginBtn.addEventListener('click', async () => {
+            showLoader();
+            try {
+                const result = await signInWithPopup(auth, googleProvider);
+                await handleAuthSuccess(result.user, 'google.com');
+            } catch (error) {
+                console.error("Erro no login com Google:", error);
+                showMessage("Falha ao conectar com Google.", true);
+                hideLoader();
+            }
+        });
+
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            showLoader();
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            try {
+                const result = await signInWithEmailAndPassword(auth, email, password);
+                await handleAuthSuccess(result.user, 'password');
+            } catch (error) {
+                showMessage("Credenciais de acesso inválidas.", true);
+                hideLoader();
+            }
+        });
+
+        registerForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            showLoader();
+            const email = document.getElementById('register-email').value;
+            const password = document.getElementById('register-password').value;
+            const confirmPassword = document.getElementById('register-confirm-password').value;
+
+            if (password !== confirmPassword) {
+                showMessage("As senhas não coincidem.", true);
+                hideLoader();
+                return;
+            }
+
+            try {
+                const result = await createUserWithEmailAndPassword(auth, email, password);
+                await handleAuthSuccess(result.user, 'password');
+            } catch (error) {
+                if (error.code === 'auth/email-already-in-use') {
+                    showMessage("Este email já está em uso.", true);
+                } else if (error.code === 'auth/weak-password') {
+                    showMessage("A senha deve ter no mínimo 6 caracteres.", true);
+                } else {
+                    showMessage("Erro ao criar registro.", true);
+                }
+                hideLoader();
+            }
+        });
+
+        completeProfileForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            showLoader();
+            if (!currentUser) {
+                showMessage("Sessão de usuário inválida. Tente fazer login novamente.", true);
+                hideLoader();
+                return;
+            }
+
+            const userData = {
+                email: currentUser.email,
+                firstName: document.getElementById('profile-firstName').value,
+                lastName: document.getElementById('profile-lastName').value,
+                age: document.getElementById('profile-age').value,
+                gender: document.getElementById('profile-gender').value,
+                weight: document.getElementById('profile-weight').value,
+                height: document.getElementById('profile-height').value,
+                lvl: 1,
+                xp: 0,
+                createdAt: new Date().toISOString(),
+                provider: currentUser.providerData[0].providerId
+            };
+
+            try {
+                await set(ref(database, 'users/' + currentUser.uid), userData);
+                window.location.href = './home.html';
+            } catch (error) {
+                console.error("Erro ao salvar perfil:", error);
+                showMessage("Não foi possível salvar seu perfil.", true);
+                hideLoader();
+            }
+        });
+
+    </script>
+</body>
+</html>

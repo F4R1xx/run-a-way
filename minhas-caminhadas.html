@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RunAWay</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" type="image/png" href="logo.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root { 
+            --glow-color: #FF7700; 
+            --background-color: #282828;
+            --card-color: #333333;
+            --text-color: #E0E0E0;
+        }
+        html, body {
+            height: 100%;
+        }
+        body { 
+            font-family: 'Chakra Petch', sans-serif; 
+            background-color: var(--background-color); 
+            color: var(--text-color); 
+        }
+        .content-card {
+            background-color: var(--card-color);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            border: 1px solid rgba(255, 119, 0, 0.1);
+        }
+        .glow-button { 
+            background: transparent; 
+            border: 2px solid var(--glow-color); 
+            color: var(--glow-color); 
+            text-shadow: 0 0 5px var(--glow-color); 
+            box-shadow: 0 0 10px rgba(255, 119, 0, 0.5), inset 0 0 10px rgba(255, 119, 0, 0.3); 
+            transition: all 0.3s ease; 
+        }
+        .glow-button:hover { 
+            background: var(--glow-color); 
+            color: #000; 
+            text-shadow: none; 
+            box-shadow: 0 0 20px rgba(255, 119, 0, 0.8), 0 0 30px rgba(255, 119, 0, 0.6); 
+        }
+        .custom-scrollbar::-webkit-scrollbar { width: 8px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); border-radius: 8px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background-color: var(--glow-color); border-radius: 8px; }
+        .loader { width: 50px; height: 50px; border: 5px solid #555; border-top-color: var(--glow-color); border-radius: 50%; animation: spin 1s linear infinite; box-shadow: 0 0 15px var(--glow-color); }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="h-screen">
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="fixed inset-0 bg-[#282828] flex items-center justify-center z-50">
+        <div class="loader"></div>
+    </div>
+    
+    <!-- Confirmation Modal -->
+    <div id="confirm-modal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
+        <div class="content-card text-center max-w-sm m-4">
+            <h3 class="text-xl font-bold text-white">Confirmar Exclusão</h3>
+            <p class="text-gray-300 my-4">Tem certeza que deseja remover esta caminhada? Seu nível e XP serão recalculados. Esta ação não pode ser desfeita.</p>
+            <div class="flex justify-center gap-4">
+                <button id="cancel-delete-btn" class="px-6 py-2 rounded-lg text-gray-300 hover:bg-gray-600 transition-colors">Cancelar</button>
+                <button id="confirm-delete-btn" class="px-6 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white font-bold transition-colors">Remover</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="app-content" class="hidden flex w-full h-full">
+        <!-- Sidebar & Mobile Menu Button -->
+        <button id="menu-open-btn" class="md:hidden fixed top-6 left-6 z-30 text-white bg-black/20 p-2 rounded-md"><i class="fas fa-bars text-xl"></i></button>
+        <aside id="sidebar" class="fixed md:relative inset-y-0 left-0 w-64 bg-black/30 backdrop-blur-sm p-6 flex flex-col z-40 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out">
+            <button id="menu-close-btn" class="md:hidden absolute top-6 right-6 text-white"><i class="fas fa-times text-2xl"></i></button>
+            <div class="flex items-center gap-4 mt-8 md:mt-0">
+                <i class="fas fa-user-circle text-4xl text-gray-400"></i>
+                <div>
+                    <h2 id="user-name-sidebar" class="font-bold text-lg text-white"></h2>
+                    <a href="#" class="text-sm text-gray-400 hover:text-orange-400">Seu Perfil</a>
+                </div>
+            </div>
+            <nav class="mt-10 flex flex-col gap-4">
+                <a href="./home.html" class="text-lg font-semibold hover:text-orange-400 transition-colors">Painel</a>
+                <a href="./cadastrar-caminhada.html" class="text-lg font-semibold hover:text-orange-400 transition-colors">Cadastrar Caminhada</a>
+                <a href="./minhas-caminhadas.html" class="text-lg font-semibold text-orange-400 transition-colors">Ver Caminhadas</a>
+                <a href="./graficos.html" class="text-lg font-semibold hover:text-orange-400 transition-colors">Gráficos</a>
+            </nav>
+            <div class="mt-auto">
+                <button id="logout-btn" class="w-full flex items-center justify-center gap-3 px-4 py-3 font-semibold rounded-lg text-red-500 hover:bg-red-500 hover:text-white transition-colors"><i class="fas fa-sign-out-alt"></i> Logout</button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 p-4 md:p-8 overflow-y-auto">
+            <div class="w-full max-w-6xl mx-auto">
+                <div class="flex justify-between items-center mb-8">
+                    <div class="text-center md:text-left">
+                        <h1 class="text-4xl font-bold tracking-wider text-white">Meu Histórico</h1>
+                        <p class="text-orange-400">Todas as suas caminhadas registradas.</p>
+                    </div>
+                     <a href="./home.html" class="hidden md:inline-block px-6 py-2 font-semibold rounded-lg glow-button uppercase tracking-wider">
+                        Voltar
+                    </a>
+                </div>
+
+                <div id="walks-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Walk cards will be inserted here -->
+                </div>
+                
+                <div id="no-walks-history" class="hidden text-center content-card mt-6">
+                    <i class="fas fa-shoe-prints text-5xl text-gray-600"></i>
+                    <p class="mt-4 text-gray-400">Você ainda não registrou nenhuma caminhada.</p>
+                </div>
+
+                 <div class="text-center mt-8 md:hidden">
+                     <a href="./home.html" class="inline-block px-8 py-3 font-semibold rounded-lg glow-button uppercase tracking-wider">
+                        Voltar
+                    </a>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script type="module">
+        import { auth, database } from './firebase.js';
+        import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { ref, get, remove, update } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
+
+        const loadingOverlay = document.getElementById('loading-overlay');
+        const appContent = document.getElementById('app-content');
+        const walksGrid = document.getElementById('walks-grid');
+        const noWalksHistoryMessage = document.getElementById('no-walks-history');
+        const confirmModal = document.getElementById('confirm-modal');
+        const confirmDeleteBtn = document.getElementById('confirm-delete-btn');
+        const cancelDeleteBtn = document.getElementById('cancel-delete-btn');
+        const sidebar = document.getElementById('sidebar');
+        const menuOpenBtn = document.getElementById('menu-open-btn');
+        const menuCloseBtn = document.getElementById('menu-close-btn');
+        const userNameSidebar = document.getElementById('user-name-sidebar');
+        const logoutBtn = document.getElementById('logout-btn');
+        
+        let currentUser = null;
+        let walkIdToDelete = null;
+
+        // Menu Logic
+        menuOpenBtn.addEventListener('click', () => { sidebar.classList.remove('-translate-x-full'); menuOpenBtn.classList.add('hidden'); });
+        menuCloseBtn.addEventListener('click', () => { sidebar.classList.add('-translate-x-full'); menuOpenBtn.classList.remove('hidden'); });
+        logoutBtn.addEventListener('click', () => signOut(auth));
+
+        const getXpForNextLevel = (level) => level <= 0 ? 100 : 100 * Math.pow(2, level - 1);
+        
+        const renderCards = (walksObject) => {
+            walksGrid.innerHTML = '';
+            if (!walksObject || Object.keys(walksObject).length === 0) {
+                noWalksHistoryMessage.classList.remove('hidden');
+                return;
+            }
+            noWalksHistoryMessage.classList.add('hidden');
+
+            const walksArray = Object.entries(walksObject).map(([id, data]) => ({ id, ...data }));
+            walksArray.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+            
+            walksArray.forEach(walk => {
+                const [year, month, day] = walk.date.split('-');
+                const formattedDate = `${day}/${month}/${year}`;
+                const card = `
+                    <div class="content-card flex flex-col" data-walk-id="${walk.id}">
+                        <div class="flex justify-between items-center border-b border-gray-700 pb-2 mb-3">
+                            <p class="font-bold text-lg text-white">${formattedDate}</p>
+                            <div class="text-lg">
+                                <a href="./editar-caminhada.html?id=${walk.id}" class="text-blue-400 hover:text-blue-300 mx-2"><i class="fas fa-pencil-alt"></i></a>
+                                <button class="remove-btn text-red-500 hover:text-red-400 mx-2" data-id="${walk.id}"><i class="fas fa-trash-alt"></i></button>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                            <span class="text-gray-400">Duração:</span> <span class="text-white font-semibold">${walk.duration}</span>
+                            <span class="text-gray-400">Distância:</span> <span class="text-white font-semibold">${walk.distance.toFixed(2)} km</span>
+                            <span class="text-gray-400">Calorias:</span> <span class="text-white font-semibold">${walk.calories}</span>
+                        </div>
+                        <div class="mt-auto pt-3 text-center text-lg font-bold" style="color: var(--glow-color); text-shadow: 0 0 5px var(--glow-color);">
+                            +${walk.xpGained} XP
+                        </div>
+                    </div>
+                `;
+                walksGrid.innerHTML += card;
+            });
+        };
+
+        const recalculateUserLevel = async () => {
+            const allWalksRef = ref(database, `users/${currentUser.uid}/walks`);
+            const snapshot = await get(allWalksRef);
+            const allWalks = snapshot.val() || {};
+            
+            let totalXp = Object.values(allWalks).reduce((sum, walk) => sum + (walk.xpGained || 0), 0);
+            
+            let newLvl = 1;
+            let xpForNextLvl = getXpForNextLevel(newLvl);
+            while (totalXp >= xpForNextLvl) {
+                totalXp -= xpForNextLvl;
+                newLvl++;
+                xpForNextLvl = getXpForNextLevel(newLvl);
+            }
+            
+            const userRef = ref(database, `users/${currentUser.uid}`);
+            await update(userRef, { lvl: newLvl, xp: totalXp });
+        };
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentUser = user;
+                const userRef = ref(database, 'users/' + user.uid);
+                const snapshot = await get(userRef);
+                if(snapshot.exists()){
+                    const userData = snapshot.val();
+                    userNameSidebar.textContent = `${userData.firstName || ''} ${userData.lastName || ''}`.trim();
+                    renderCards(userData.walks);
+                }
+                loadingOverlay.classList.add('hidden');
+                appContent.classList.remove('hidden');
+            } else {
+                window.location.href = './index.html';
+            }
+        });
+
+        // --- Delete Logic ---
+        walksGrid.addEventListener('click', (e) => {
+            const removeButton = e.target.closest('.remove-btn');
+            if (removeButton) {
+                walkIdToDelete = removeButton.dataset.id;
+                confirmModal.classList.remove('hidden');
+            }
+        });
+        
+        cancelDeleteBtn.addEventListener('click', () => {
+            walkIdToDelete = null;
+            confirmModal.classList.add('hidden');
+        });
+
+        confirmDeleteBtn.addEventListener('click', async () => {
+            if (!walkIdToDelete) return;
+            loadingOverlay.classList.remove('hidden');
+            confirmModal.classList.add('hidden');
+
+            try {
+                const walkRef = ref(database, `users/${currentUser.uid}/walks/${walkIdToDelete}`);
+                await remove(walkRef);
+                await recalculateUserLevel();
+                document.querySelector(`div[data-walk-id="${walkIdToDelete}"]`).remove();
+                if (walksGrid.childElementCount === 0) {
+                    noWalksHistoryMessage.classList.remove('hidden');
+                }
+            } catch (error) {
+                console.error("Erro ao remover caminhada:", error);
+                alert("Não foi possível remover a caminhada.");
+            } finally {
+                walkIdToDelete = null;
+                loadingOverlay.classList.add('hidden');
+            }
+        });
+    </script>
+</body>
+</html>

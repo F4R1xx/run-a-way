@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RunAWay</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" type="image/png" href="logo.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root { 
+            --glow-color: #FF7700; 
+            --background-color: #282828;
+            --card-color: #333333;
+            --text-color: #E0E0E0;
+        }
+        html, body {
+            height: 100%;
+        }
+        body { 
+            font-family: 'Chakra Petch', sans-serif; 
+            background-color: var(--background-color); 
+            color: var(--text-color); 
+        }
+        .content-card {
+            background-color: var(--card-color);
+            border-radius: 1rem;
+            padding: 2rem;
+            border: 1px solid rgba(255, 119, 0, 0.1);
+            box-shadow: 0 0 15px rgba(255, 119, 0, 0.1);
+        }
+        .futuristic-input { 
+            background: rgba(0,0,0,0.2); 
+            border: none; 
+            border-bottom: 1px solid rgba(255, 119, 0, 0.3); 
+            color: var(--glow-color); 
+            transition: all 0.3s ease; 
+        }
+        .futuristic-input:focus { 
+            outline: none; 
+            border-bottom-color: var(--glow-color); 
+            box-shadow: 0 5px 15px -10px var(--glow-color); 
+        }
+        .glow-button { 
+            background: transparent; 
+            border: 2px solid var(--glow-color); 
+            color: var(--glow-color); 
+            text-shadow: 0 0 5px var(--glow-color); 
+            box-shadow: 0 0 10px rgba(255, 119, 0, 0.5), inset 0 0 10px rgba(255, 119, 0, 0.3); 
+            transition: all 0.3s ease; 
+        }
+        .glow-button:hover, .glow-button:disabled { 
+            background: var(--glow-color); 
+            color: #000; 
+            text-shadow: none; 
+            box-shadow: 0 0 20px rgba(255, 119, 0, 0.8), 0 0 30px rgba(255, 119, 0, 0.6); 
+        }
+        .glow-button:disabled { opacity: 0.5; cursor: not-allowed; }
+        input[type="time"]::-webkit-calendar-picker-indicator { filter: invert(1) brightness(0.5) sepia(1) hue-rotate(330deg) saturate(5); }
+        .loader { width: 50px; height: 50px; border: 5px solid #555; border-top-color: var(--glow-color); border-radius: 50%; animation: spin 1s linear infinite; box-shadow: 0 0 15px var(--glow-color); }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="h-screen">
+    
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="fixed inset-0 bg-[#282828] flex items-center justify-center z-50">
+        <div class="loader"></div>
+    </div>
+
+    <div id="app-content" class="hidden flex w-full h-full">
+        <!-- Sidebar & Mobile Menu Button -->
+        <button id="menu-open-btn" class="md:hidden fixed top-6 left-6 z-30 text-white bg-black/20 p-2 rounded-md"><i class="fas fa-bars text-xl"></i></button>
+        <aside id="sidebar" class="fixed md:relative inset-y-0 left-0 w-64 bg-black/30 backdrop-blur-sm p-6 flex flex-col z-40 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out">
+            <button id="menu-close-btn" class="md:hidden absolute top-6 right-6 text-white"><i class="fas fa-times text-2xl"></i></button>
+            <div class="flex items-center gap-4 mt-8 md:mt-0">
+                <i class="fas fa-user-circle text-4xl text-gray-400"></i>
+                <div>
+                    <h2 id="user-name-sidebar" class="font-bold text-lg text-white"></h2>
+                    <a href="#" class="text-sm text-gray-400 hover:text-orange-400">Seu Perfil</a>
+                </div>
+            </div>
+            <nav class="mt-10 flex flex-col gap-4">
+                <a href="./home.html" class="text-lg font-semibold hover:text-orange-400 transition-colors">Painel</a>
+                <a href="./cadastrar-caminhada.html" class="text-lg font-semibold text-orange-400 transition-colors">Cadastrar Caminhada</a>
+                <a href="./minhas-caminhadas.html" class="text-lg font-semibold hover:text-orange-400 transition-colors">Ver Caminhadas</a>
+                <a href="./graficos.html" class="text-lg font-semibold hover:text-orange-400 transition-colors">Gráficos</a>
+            </nav>
+            <div class="mt-auto">
+                <button id="logout-btn" class="w-full flex items-center justify-center gap-3 px-4 py-3 font-semibold rounded-lg text-red-500 hover:bg-red-500 hover:text-white transition-colors"><i class="fas fa-sign-out-alt"></i> Logout</button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 p-4 md:p-8 flex items-center justify-center">
+            <div id="form-container" class="w-full max-w-2xl">
+                <div class="text-center mb-8">
+                    <h1 class="text-4xl font-bold tracking-wider text-white">Editar Caminhada</h1>
+                    <p class="text-orange-400">Ajuste os dados da sua atividade.</p>
+                </div>
+                <form id="walk-form" class="content-card space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label for="walk-date" class="text-sm font-medium text-gray-300">Data da Caminhada</label>
+                            <input id="walk-date" type="date" required class="w-full px-4 py-2 mt-1 futuristic-input rounded-md">
+                        </div>
+                        <div>
+                            <label for="walk-duration" class="text-sm font-medium text-gray-300">Duração (HH:MM:SS)</label>
+                            <input id="walk-duration" type="time" step="1" required class="w-full px-4 py-2 mt-1 futuristic-input rounded-md">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label for="walk-distance" class="text-sm font-medium text-gray-300">Distância (km)</label>
+                            <input id="walk-distance" type="number" step="0.01" required class="w-full px-4 py-2 mt-1 futuristic-input rounded-md">
+                        </div>
+                        <div>
+                            <label for="walk-calories" class="text-sm font-medium text-gray-300">Calorias Queimadas</label>
+                            <input id="walk-calories" type="number" required class="w-full px-4 py-2 mt-1 futuristic-input rounded-md">
+                        </div>
+                    </div>
+                    <div class="flex flex-col md:flex-row items-center gap-4 pt-4">
+                        <button type="submit" id="submit-btn" class="w-full md:w-auto flex-1 px-6 py-3 font-semibold rounded-lg glow-button uppercase tracking-wider">Salvar Alterações</button>
+                        <a href="./minhas-caminhadas.html" class="w-full md:w-auto px-6 py-3 text-center font-semibold rounded-lg text-gray-400 hover:bg-gray-700 hover:text-white transition-colors">Cancelar</a>
+                    </div>
+                </form>
+                <div id="message-area" class="hidden mt-4 text-center text-sm font-medium p-3 rounded-lg"></div>
+            </div>
+        </main>
+    </div>
+
+    <script type="module">
+        import { auth, database } from './firebase.js';
+        import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { ref, get, update } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
+
+        const loadingOverlay = document.getElementById('loading-overlay');
+        const appContent = document.getElementById('app-content');
+        const walkForm = document.getElementById('walk-form');
+        const submitBtn = document.getElementById('submit-btn');
+        const messageArea = document.getElementById('message-area');
+        const sidebar = document.getElementById('sidebar');
+        const menuOpenBtn = document.getElementById('menu-open-btn');
+        const menuCloseBtn = document.getElementById('menu-close-btn');
+        const userNameSidebar = document.getElementById('user-name-sidebar');
+        const logoutBtn = document.getElementById('logout-btn');
+        
+        let currentUser = null;
+        let walkId = null;
+        let originalWalkData = null;
+
+        const urlParams = new URLSearchParams(window.location.search);
+        walkId = urlParams.get('id');
+
+        // Menu Logic
+        menuOpenBtn.addEventListener('click', () => { sidebar.classList.remove('-translate-x-full'); menuOpenBtn.classList.add('hidden'); });
+        menuCloseBtn.addEventListener('click', () => { sidebar.classList.add('-translate-x-full'); menuOpenBtn.classList.remove('hidden'); });
+        logoutBtn.addEventListener('click', () => signOut(auth));
+
+        const getXpForNextLevel = (level) => level <= 0 ? 100 : 100 * Math.pow(2, level - 1);
+
+        const showMessage = (message, isSuccess = false) => {
+            messageArea.innerHTML = message;
+            messageArea.classList.remove('hidden');
+            messageArea.style.backgroundColor = isSuccess ? 'rgba(0, 255, 155, 0.3)' : 'rgba(255, 75, 75, 0.3)';
+            messageArea.style.color = isSuccess ? '#00ff9b' : '#ff4b4b';
+        };
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentUser = user;
+                if (!walkId) {
+                    window.location.href = './minhas-caminhadas.html';
+                    return;
+                }
+                
+                try {
+                    const userRef = ref(database, `users/${currentUser.uid}`);
+                    const userSnapshot = await get(userRef);
+                    const walkRef = ref(database, `users/${currentUser.uid}/walks/${walkId}`);
+                    const walkSnapshot = await get(walkRef);
+
+                    if (userSnapshot.exists()) {
+                         const userData = userSnapshot.val();
+                         userNameSidebar.textContent = `${userData.firstName || ''} ${userData.lastName || ''}`.trim();
+                    }
+
+                    if (walkSnapshot.exists()) {
+                        originalWalkData = walkSnapshot.val();
+                        document.getElementById('walk-date').value = originalWalkData.date;
+                        document.getElementById('walk-duration').value = originalWalkData.duration;
+                        document.getElementById('walk-distance').value = originalWalkData.distance;
+                        document.getElementById('walk-calories').value = originalWalkData.calories;
+                        loadingOverlay.classList.add('hidden');
+                        appContent.classList.remove('hidden');
+                    } else {
+                        alert("Caminhada não encontrada.");
+                        window.location.href = './minhas-caminhadas.html';
+                    }
+                } catch (error) {
+                    console.error("Erro ao carregar dados:", error);
+                    alert("Não foi possível carregar os dados.");
+                    window.location.href = './minhas-caminhadas.html';
+                }
+
+            } else {
+                window.location.href = './index.html';
+            }
+        });
+
+        walkForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            submitBtn.disabled = true;
+            submitBtn.textContent = "Salvando...";
+
+            const updatedDistance = parseFloat(document.getElementById('walk-distance').value);
+            const updatedWalkData = {
+                date: document.getElementById('walk-date').value,
+                duration: document.getElementById('walk-duration').value,
+                distance: updatedDistance,
+                calories: parseInt(document.getElementById('walk-calories').value),
+                createdAt: originalWalkData.createdAt,
+                xpGained: Math.floor((updatedDistance * 1000) / 100)
+            };
+
+            try {
+                const walkRef = ref(database, `users/${currentUser.uid}/walks/${walkId}`);
+                await update(walkRef, updatedWalkData);
+
+                const allWalksRef = ref(database, `users/${currentUser.uid}/walks`);
+                const allWalksSnapshot = await get(allWalksRef);
+                const allWalks = allWalksSnapshot.val();
+                
+                let totalXp = 0;
+                if (allWalks) {
+                    totalXp = Object.values(allWalks).reduce((sum, walk) => sum + (walk.xpGained || 0), 0);
+                }
+
+                let newLvl = 1;
+                let xpForNextLvl = getXpForNextLevel(newLvl);
+                while (totalXp >= xpForNextLvl) {
+                    totalXp -= xpForNextLvl;
+                    newLvl++;
+                    xpForNextLvl = getXpForNextLevel(newLvl);
+                }
+
+                const userRef = ref(database, `users/${currentUser.uid}`);
+                await update(userRef, { lvl: newLvl, xp: totalXp });
+
+                showMessage("Caminhada atualizada com sucesso!", true);
+                setTimeout(() => {
+                    window.location.href = './minhas-caminhadas.html';
+                }, 1500);
+
+            } catch (error) {
+                console.error("Erro ao atualizar caminhada:", error);
+                showMessage("Ocorreu um erro ao salvar as alterações.");
+                submitBtn.disabled = false;
+                submitBtn.textContent = "Salvar Alterações";
+            }
+        });
+    </script>
+</body>
+</html>
