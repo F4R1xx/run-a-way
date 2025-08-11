@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RunAWay</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" type="image/png" href="logo.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root { 
+            --glow-color: #FF7700; 
+            --background-color: #282828;
+            --card-color: #333333;
+            --text-color: #E0E0E0;
+        }
+        html, body {
+            height: 100%;
+        }
+        body { 
+            font-family: 'Chakra Petch', sans-serif; 
+            background-color: var(--background-color); 
+            color: var(--text-color); 
+        }
+        main {
+            background-image: 
+                radial-gradient(circle at 25% 25%, rgba(255, 119, 0, 0.1) 0%, transparent 40%),
+                radial-gradient(circle at 75% 75%, rgba(50, 150, 255, 0.1) 0%, transparent 40%);
+        }
+        .content-card {
+            background-color: var(--card-color);
+            border-radius: 1rem;
+            padding: 2rem;
+            border: 1px solid rgba(255, 119, 0, 0.1);
+            box-shadow: 0 0 15px rgba(255, 119, 0, 0.1);
+        }
+        .futuristic-input { 
+            background: rgba(0,0,0,0.2); 
+            border: none; 
+            border-bottom: 1px solid rgba(255, 119, 0, 0.3); 
+            color: var(--glow-color); 
+            transition: all 0.3s ease; 
+        }
+        .futuristic-input:focus { 
+            outline: none; 
+            border-bottom-color: var(--glow-color); 
+            box-shadow: 0 5px 15px -10px var(--glow-color); 
+        }
+        .futuristic-select { -webkit-appearance: none; -moz-appearance: none; appearance: none; background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23FF7700%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22/%3E%3C/svg%3E'); background-repeat: no-repeat; background-position: right 0.7rem top 50%; background-size: 0.65rem auto; }
+        .futuristic-select option { background: #111; color: var(--glow-color); }
+        .view-mode .futuristic-input, .view-mode .futuristic-select {
+            background: transparent;
+            border-bottom-color: transparent;
+            color: var(--text-color);
+            padding-left: 0;
+            pointer-events: none;
+        }
+        .view-mode .futuristic-select { background-image: none; }
+
+        .glow-button { 
+            background: transparent; 
+            border: 2px solid var(--glow-color); 
+            color: var(--glow-color); 
+            text-shadow: 0 0 5px var(--glow-color); 
+            box-shadow: 0 0 10px rgba(255, 119, 0, 0.5), inset 0 0 10px rgba(255, 119, 0, 0.3); 
+            transition: all 0.3s ease; 
+        }
+        .glow-button:hover, .glow-button:disabled { 
+            background: var(--glow-color); 
+            color: #000; 
+            text-shadow: none; 
+            box-shadow: 0 0 20px rgba(255, 119, 0, 0.8), 0 0 30px rgba(255, 119, 0, 0.6); 
+        }
+        .glow-button:disabled { opacity: 0.5; cursor: not-allowed; }
+        .loader { width: 50px; height: 50px; border: 5px solid #555; border-top-color: var(--glow-color); border-radius: 50%; animation: spin 1s linear infinite; box-shadow: 0 0 15px var(--glow-color); }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .xp-bar-container { background-color: #444; border-radius: 9999px; height: 0.75rem; overflow: hidden; border: 1px solid rgba(255, 119, 0, 0.2); }
+        .xp-bar-fill { background-color: var(--glow-color); height: 100%; border-radius: 9999px; box-shadow: 0 0 10px var(--glow-color); transition: width 0.5s ease-in-out; }
+    </style>
+</head>
+<body class="h-screen">
+    
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="fixed inset-0 bg-[#282828] flex items-center justify-center z-50">
+        <div class="loader"></div>
+    </div>
+
+    <div id="app-content" class="hidden flex w-full h-full">
+        <!-- Sidebar -->
+        <button id="menu-open-btn" class="md:hidden fixed top-6 left-6 z-30 text-white bg-black/20 p-2 rounded-md"><i class="fas fa-bars text-xl"></i></button>
+        <aside id="sidebar" class="fixed md:relative inset-y-0 left-0 w-64 bg-black/30 backdrop-blur-sm p-6 flex flex-col z-40 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out">
+            <button id="menu-close-btn" class="md:hidden absolute top-6 right-6 text-white"><i class="fas fa-times text-2xl"></i></button>
+            <div class="flex items-center gap-4 mt-8 md:mt-0">
+                <i class="fas fa-user-circle text-4xl text-gray-400"></i>
+                <div>
+                    <h2 id="user-name-sidebar" class="font-bold text-lg text-white"></h2>
+                    <a href="/perfil.html" class="text-sm text-orange-400 hover:underline">Seu Perfil</a>
+                </div>
+            </div>
+            <nav class="mt-10 flex flex-col gap-4">
+                <a href="./home.html" class="text-lg font-semibold hover:text-orange-400 transition-colors">Painel</a>
+                <a href="./cadastrar-caminhada.html" class="text-lg font-semibold hover:text-orange-400 transition-colors">Cadastrar Caminhada</a>
+                <a href="./minhas-caminhadas.html" class="text-lg font-semibold hover:text-orange-400 transition-colors">Ver Caminhadas</a>
+                <a href="./graficos.html" class="text-lg font-semibold hover:text-orange-400 transition-colors">Gráficos</a>
+                <a href="./conquistas.html" class="text-lg font-semibold hover:text-orange-400 transition-colors">Conquistas</a>
+            </nav>
+            <div class="mt-auto">
+                <button id="logout-btn" class="w-full flex items-center justify-center gap-3 px-4 py-3 font-semibold rounded-lg text-red-500 hover:bg-red-500 hover:text-white transition-colors"><i class="fas fa-sign-out-alt"></i> Logout</button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 p-4 md:p-8 overflow-y-auto">
+            <div class="w-full max-w-4xl mx-auto space-y-8">
+                <!-- Profile Header Card -->
+                <div class="content-card flex flex-col md:flex-row items-center gap-6">
+                    <div class="relative">
+                        <i class="fas fa-user-circle text-4xl text-gray-400 text-8xl text-orange-400" style="text-shadow: 0 0 15px var(--glow-color);"></i>
+                    </div>
+                    <div class="flex-1 text-center md:text-left">
+                        <h1 id="profile-name-header" class="text-4xl font-bold tracking-wider text-white"></h1>
+                        <p id="profile-email-header" class="text-orange-400"></p>
+                        <div class="mt-4">
+                            <div class="flex justify-between items-center mb-1 text-sm">
+                                <span id="level-display" class="font-semibold text-white"></span>
+                                <span id="xp-display" class="text-gray-400"></span>
+                            </div>
+                            <div class="xp-bar-container"><div id="xp-bar-fill" class="xp-bar-fill"></div></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stats Section -->
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="content-card text-center"><i class="fas fa-calendar-alt text-2xl text-orange-400 mb-2"></i><p class="text-sm text-gray-400">Membro Desde</p><p id="stat-joined" class="text-lg font-bold"></p></div>
+                    <div class="content-card text-center"><i class="fas fa-shoe-prints text-2xl text-orange-400 mb-2"></i><p class="text-sm text-gray-400">Caminhadas</p><p id="stat-walks" class="text-lg font-bold"></p></div>
+                    <div class="content-card text-center"><i class="fas fa-route text-2xl text-orange-400 mb-2"></i><p class="text-sm text-gray-400">Distância Total</p><p id="stat-distance" class="text-lg font-bold"></p></div>
+                    <div class="content-card text-center"><i class="fas fa-fire text-2xl text-orange-400 mb-2"></i><p class="text-sm text-gray-400">Calorias Totais</p><p id="stat-calories" class="text-lg font-bold"></p></div>
+                </div>
+
+                <!-- Profile Form -->
+                <form id="profile-form" class="content-card view-mode">
+                    <div class="flex justify-between items-center mb-6">
+                         <h2 class="text-2xl font-bold tracking-wider text-white">Informações Pessoais</h2>
+                         <div id="button-container">
+                            <button type="button" id="edit-btn" class="px-4 py-2 font-semibold rounded-lg glow-button text-sm"><i class="fas fa-pencil-alt mr-2"></i>Editar</button>
+                            <div id="edit-mode-buttons" class="hidden flex items-center gap-2">
+                                 <button type="submit" id="save-btn" class="px-4 py-2 font-semibold rounded-lg glow-button text-sm"><i class="fas fa-save mr-2"></i>Salvar</button>
+                                 <button type="button" id="cancel-btn" class="px-4 py-2 text-center font-semibold rounded-lg text-gray-400 hover:bg-gray-700 hover:text-white transition-colors text-sm">Cancelar</button>
+                            </div>
+                        </div>
+                    </div>
+                   
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                        <div>
+                            <label for="profile-firstName" class="text-sm font-medium text-gray-400">Nome</label>
+                            <input id="profile-firstName" type="text" required class="w-full py-1 mt-1 futuristic-input text-lg">
+                        </div>
+                        <div>
+                            <label for="profile-lastName" class="text-sm font-medium text-gray-400">Sobrenome</label>
+                            <input id="profile-lastName" type="text" required class="w-full py-1 mt-1 futuristic-input text-lg">
+                        </div>
+                        <div>
+                            <label for="profile-age" class="text-sm font-medium text-gray-400">Idade</label>
+                            <input id="profile-age" type="number" required class="w-full py-1 mt-1 futuristic-input text-lg">
+                        </div>
+                        <div>
+                            <label for="profile-gender" class="text-sm font-medium text-gray-400">Gênero</label>
+                            <select id="profile-gender" required class="w-full py-1 mt-1 futuristic-input text-lg">
+                                <option value="masculino">Masculino</option>
+                                <option value="feminino">Feminino</option>
+                                <option value="outro">Outro</option>
+                                <option value="nao-informar">Prefiro não informar</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="profile-weight" class="text-sm font-medium text-gray-400">Peso (kg)</label>
+                            <input id="profile-weight" type="number" step="0.1" required class="w-full py-1 mt-1 futuristic-input text-lg">
+                        </div>
+                        <div>
+                            <label for="profile-height" class="text-sm font-medium text-gray-400">Altura (cm)</label>
+                            <input id="profile-height" type="number" required class="w-full py-1 mt-1 futuristic-input text-lg">
+                        </div>
+                    </div>
+                    <div id="message-area" class="hidden mt-6 text-center text-sm font-medium p-3 rounded-lg"></div>
+                </form>
+            </div>
+        </main>
+    </div>
+
+    <script type="module">
+        import { auth, database } from './firebase.js';
+        import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { ref, get, update } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
+
+        // --- UI Elements ---
+        const loadingOverlay = document.getElementById('loading-overlay');
+        const appContent = document.getElementById('app-content');
+        const profileForm = document.getElementById('profile-form');
+        const messageArea = document.getElementById('message-area');
+        const sidebar = document.getElementById('sidebar');
+        const menuOpenBtn = document.getElementById('menu-open-btn');
+        const menuCloseBtn = document.getElementById('menu-close-btn');
+        const userNameSidebar = document.getElementById('user-name-sidebar');
+        const logoutBtn = document.getElementById('logout-btn');
+        
+        const editBtn = document.getElementById('edit-btn');
+        const saveBtn = document.getElementById('save-btn');
+        const cancelBtn = document.getElementById('cancel-btn');
+        const editModeButtons = document.getElementById('edit-mode-buttons');
+
+        const profileNameHeader = document.getElementById('profile-name-header');
+        const profileEmailHeader = document.getElementById('profile-email-header');
+        const levelDisplay = document.getElementById('level-display');
+        const xpDisplay = document.getElementById('xp-display');
+        const xpBarFill = document.getElementById('xp-bar-fill');
+
+        const statJoined = document.getElementById('stat-joined');
+        const statWalks = document.getElementById('stat-walks');
+        const statDistance = document.getElementById('stat-distance');
+        const statCalories = document.getElementById('stat-calories');
+        
+        let currentUser = null;
+        let originalUserData = {};
+
+        // --- Menu Logic ---
+        menuOpenBtn.addEventListener('click', () => { sidebar.classList.remove('-translate-x-full'); });
+        menuCloseBtn.addEventListener('click', () => { sidebar.classList.add('-translate-x-full'); });
+        logoutBtn.addEventListener('click', () => signOut(auth));
+        
+        // --- Helper Functions ---
+        const getXpForNextLevel = (level) => {
+            const levelCap = 50;
+            const fixedXpAfterCap = 1000;
+            if (level >= levelCap) return fixedXpAfterCap;
+            const baseXP = 100;
+            const incrementPerLevel = 18;
+            return Math.floor(baseXP + (level - 1) * incrementPerLevel);
+        };
+
+        const showMessage = (message, isSuccess = false) => {
+            messageArea.innerHTML = message;
+            messageArea.classList.remove('hidden');
+            messageArea.style.backgroundColor = isSuccess ? 'rgba(0, 255, 155, 0.3)' : 'rgba(255, 75, 75, 0.3)';
+            messageArea.style.color = isSuccess ? '#00ff9b' : '#ff4b4b';
+            setTimeout(() => messageArea.classList.add('hidden'), 3000);
+        };
+
+        const setFormState = (isEditing) => {
+            profileForm.classList.toggle('view-mode', !isEditing);
+            editBtn.classList.toggle('hidden', isEditing);
+            editModeButtons.classList.toggle('hidden', !isEditing);
+        };
+
+        const populateUI = (userData) => {
+            originalUserData = { ...userData };
+            const fullName = `${userData.firstName || ''} ${userData.lastName || ''}`.trim();
+
+            // Sidebar and Headers
+            userNameSidebar.textContent = fullName;
+            profileNameHeader.textContent = fullName;
+            profileEmailHeader.textContent = userData.email || '';
+
+            // Level and XP
+            const level = userData.lvl || 1;
+            const currentXp = userData.xp || 0;
+            const xpForNextLevel = getXpForNextLevel(level);
+            levelDisplay.textContent = `Nível ${level}`;
+            xpDisplay.textContent = `${currentXp} / ${xpForNextLevel} XP`;
+            xpBarFill.style.width = `${(currentXp / xpForNextLevel) * 100}%`;
+
+            // Stats
+            statJoined.textContent = new Date(userData.createdAt).toLocaleDateString('pt-BR');
+            const walks = userData.walks ? Object.values(userData.walks) : [];
+            statWalks.textContent = walks.length;
+            const totalDistance = walks.reduce((sum, walk) => sum + (walk.distance || 0), 0);
+            statDistance.textContent = `${totalDistance.toFixed(2)} km`;
+            const totalCalories = walks.reduce((sum, walk) => sum + (walk.calories || 0), 0);
+            statCalories.textContent = totalCalories.toLocaleString('pt-BR');
+
+            // Form Fields
+            document.getElementById('profile-firstName').value = userData.firstName || '';
+            document.getElementById('profile-lastName').value = userData.lastName || '';
+            document.getElementById('profile-age').value = userData.age || '';
+            document.getElementById('profile-gender').value = userData.gender || 'nao-informar';
+            document.getElementById('profile-weight').value = userData.weight || '';
+            document.getElementById('profile-height').value = userData.height || '';
+        };
+
+        // --- Auth and Data Loading ---
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentUser = user;
+                const userRef = ref(database, 'users/' + user.uid);
+                try {
+                    const snapshot = await get(userRef);
+                    if (snapshot.exists()) {
+                        populateUI(snapshot.val());
+                    } else {
+                        window.location.href = './index.html';
+                    }
+                    loadingOverlay.classList.add('hidden');
+                    appContent.classList.remove('hidden');
+                } catch (error) {
+                    console.error("Erro ao carregar dados do perfil:", error);
+                    showMessage("Não foi possível carregar seu perfil.", true);
+                    loadingOverlay.classList.add('hidden');
+                }
+            } else {
+                window.location.href = './index.html';
+            }
+        });
+        
+        // --- Button and Form Logic ---
+        editBtn.addEventListener('click', () => {
+            setFormState(true);
+        });
+
+        cancelBtn.addEventListener('click', () => {
+            populateUI(originalUserData); // Restore original data
+            setFormState(false);
+            messageArea.classList.add('hidden');
+        });
+
+        profileForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            saveBtn.disabled = true;
+            saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Salvando...';
+
+            const updatedData = {
+                firstName: document.getElementById('profile-firstName').value,
+                lastName: document.getElementById('profile-lastName').value,
+                age: document.getElementById('profile-age').value,
+                gender: document.getElementById('profile-gender').value,
+                weight: document.getElementById('profile-weight').value,
+                height: document.getElementById('profile-height').value,
+            };
+
+            try {
+                const userRef = ref(database, 'users/' + currentUser.uid);
+                await update(userRef, updatedData);
+                
+                originalUserData = { ...originalUserData, ...updatedData };
+                populateUI(originalUserData);
+                
+                showMessage("Perfil atualizado com sucesso!", true);
+                setFormState(false);
+
+            } catch (error) {
+                console.error("Erro ao salvar perfil:", error);
+                showMessage("Ocorreu um erro ao salvar. Tente novamente.", true);
+            } finally {
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = '<i class="fas fa-save mr-2"></i>Salvar';
+            }
+        });
+
+    </script>
+</body>
+</html>

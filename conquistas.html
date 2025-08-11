@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RunAWay - Conquistas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" type="image/png" href="logo.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root { 
+            --glow-color: #FF7700; 
+            --background-color: #282828;
+            --card-color: #333333;
+            --text-color: #E0E0E0;
+            --bronze: #cd7f32;
+            --silver: #c0c0c0;
+            --gold: #ffd700;
+        }
+        body { 
+            font-family: 'Chakra Petch', sans-serif; 
+            background-color: var(--background-color); 
+            color: var(--text-color); 
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(255, 119, 0, 0.1), transparent 40%),
+                radial-gradient(circle at 85% 30%, rgba(50, 150, 255, 0.08), transparent 40%);
+        }
+        .loader { width: 50px; height: 50px; border: 5px solid #555; border-top-color: var(--glow-color); border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Estilos das Medalhas Desbloqueadas */
+        .unlocked-medal {
+            background-color: var(--card-color);
+            border-radius: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+            animation: float-in 0.5s ease-out forwards;
+            opacity: 0;
+        }
+        .unlocked-medal:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.4);
+        }
+        @keyframes float-in {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .unlocked-medal .icon-wrapper {
+            position: relative;
+            padding: 1.5rem;
+            border-radius: 50%;
+            font-size: 3.5rem;
+            margin: 0 auto 1rem;
+            width: 120px;
+            height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: pulse-glow 2.5s infinite ease-in-out;
+        }
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 20px -5px, 0 0 35px -10px; }
+            50% { box-shadow: 0 0 30px 0px, 0 0 50px 0px; }
+        }
+        
+        .unlocked-medal.bronze .icon-wrapper { color: var(--bronze); animation-name: pulse-glow-bronze; }
+        .unlocked-medal.silver .icon-wrapper { color: var(--silver); animation-name: pulse-glow-silver; }
+        .unlocked-medal.gold .icon-wrapper { color: var(--gold); animation-name: pulse-glow-gold; }
+
+        @keyframes pulse-glow-bronze { 50% { box-shadow: 0 0 30px 0px var(--bronze), 0 0 50px 0px var(--bronze); } }
+        @keyframes pulse-glow-silver { 50% { box-shadow: 0 0 30px 0px var(--silver), 0 0 50px 0px var(--silver); } }
+        @keyframes pulse-glow-gold { 50% { box-shadow: 0 0 30px 0px var(--gold), 0 0 50px 0px var(--gold); } }
+
+        /* Estilos das Medalhas Bloqueadas e Tooltip */
+        .locked-medal {
+            background-color: rgba(0,0,0,0.2);
+            border-radius: 0.75rem;
+            transition: all 0.3s ease;
+            filter: grayscale(90%);
+            position: relative; /* Essencial para o tooltip */
+        }
+        .locked-medal:hover {
+            background-color: rgba(0,0,0,0.4);
+            filter: grayscale(50%);
+        }
+        
+        .locked-medal .tooltip {
+            visibility: hidden;
+            opacity: 0;
+            position: absolute;
+            bottom: 105%;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #1a1a1a;
+            color: var(--text-color);
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            white-space: nowrap;
+            z-index: 10;
+            transition: opacity 0.2s ease, visibility 0.2s ease;
+            pointer-events: none;
+        }
+
+        .locked-medal:hover .tooltip {
+            visibility: visible;
+            opacity: 1;
+        }
+    </style>
+</head>
+<body class="h-screen">
+
+    <div id="loading-overlay" class="fixed inset-0 bg-[#282828] flex items-center justify-center z-50">
+        <div class="loader"></div>
+    </div>
+
+    <div id="app-content" class="hidden flex w-full h-full">
+        <!-- Sidebar -->
+        <button id="menu-open-btn" class="md:hidden fixed top-6 left-6 z-30 text-white bg-black/20 p-2 rounded-md"><i class="fas fa-bars text-xl"></i></button>
+        <aside id="sidebar" class="fixed md:relative inset-y-0 left-0 w-64 bg-black/30 backdrop-blur-sm p-6 flex flex-col z-40 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out">
+            <button id="menu-close-btn" class="md:hidden absolute top-6 right-6 text-white"><i class="fas fa-times text-2xl"></i></button>
+            <div class="flex items-center gap-4 mt-8 md:mt-0">
+                <i class="fas fa-user-circle text-4xl text-gray-400"></i>
+                <div>
+                    <h2 id="user-name-sidebar" class="font-bold text-lg text-white"></h2>
+                    <a href="./perfil.html" class="text-sm text-gray-400 hover:text-orange-400">Seu Perfil</a>
+                </div>
+            </div>
+            <nav class="mt-10 flex flex-col gap-4">
+                <a href="./home.html" class="text-lg font-semibold hover:text-orange-400 transition-colors">Painel</a>
+                <a href="./cadastrar-caminhada.html" class="text-lg font-semibold hover:text-orange-400 transition-colors">Cadastrar Caminhada</a>
+                <a href="./minhas-caminhadas.html" class="text-lg font-semibold hover:text-orange-400 transition-colors">Ver Caminhadas</a>
+                <a href="./graficos.html" class="text-lg font-semibold hover:text-orange-400 transition-colors">Gráficos</a>
+                <a href="./conquistas.html" class="text-lg font-semibold text-orange-400 transition-colors">Conquistas</a>
+            </nav>
+            <div class="mt-auto">
+                <button id="logout-btn" class="w-full flex items-center justify-center gap-3 px-4 py-3 font-semibold rounded-lg text-red-500 hover:bg-red-500 hover:text-white transition-colors"><i class="fas fa-sign-out-alt"></i> Logout</button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 p-4 md:p-8 overflow-y-auto">
+            <div class="w-full max-w-6xl mx-auto">
+                <div class="text-center md:text-left mb-8">
+                    <h1 class="text-4xl font-bold tracking-wider text-white">Hall de Medalhas</h1>
+                    <p id="summary-text" class="text-orange-400">Sua coleção de conquistas e desafios.</p>
+                </div>
+
+                <!-- Unlocked Achievements Section -->
+                <div id="unlocked-section">
+                    <h2 class="text-2xl font-bold text-white border-b-2 border-orange-500 pb-2 mb-6">Medalhas Desbloqueadas</h2>
+                    <div id="unlocked-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                        <!-- Unlocked medals will be inserted here -->
+                    </div>
+                </div>
+
+                 <!-- Locked Achievements Section -->
+                <div id="locked-section" class="mt-12">
+                    <h2 class="text-2xl font-bold text-gray-400 border-b border-gray-700 pb-2 mb-6">Desafios Pendentes</h2>
+                    <div id="locked-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                        <!-- Locked medals will be inserted here -->
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script type="module">
+        import { auth, database } from './firebase.js';
+        import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { ref, get } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
+        import { allAchievements } from './achievements.js';
+
+        const loadingOverlay = document.getElementById('loading-overlay');
+        const appContent = document.getElementById('app-content');
+        const unlockedGrid = document.getElementById('unlocked-grid');
+        const lockedGrid = document.getElementById('locked-grid');
+        const summaryText = document.getElementById('summary-text');
+        const sidebar = document.getElementById('sidebar');
+        const menuOpenBtn = document.getElementById('menu-open-btn');
+        const menuCloseBtn = document.getElementById('menu-close-btn');
+        const userNameSidebar = document.getElementById('user-name-sidebar');
+        const logoutBtn = document.getElementById('logout-btn');
+
+        menuOpenBtn.addEventListener('click', () => sidebar.classList.remove('-translate-x-full'));
+        menuCloseBtn.addEventListener('click', () => sidebar.classList.add('-translate-x-full'));
+        logoutBtn.addEventListener('click', () => signOut(auth));
+
+        const renderAchievements = (unlockedAchievementsMap) => {
+            unlockedGrid.innerHTML = '';
+            lockedGrid.innerHTML = '';
+            let unlockedCount = 0;
+            
+            allAchievements.forEach((ach, index) => {
+                const isUnlocked = !!unlockedAchievementsMap[ach.id];
+                
+                if (isUnlocked) {
+                    unlockedCount++;
+                    const card = `
+                        <div class="unlocked-medal text-center p-6 ${ach.tier}" style="animation-delay: ${index * 50}ms;">
+                            <div class="icon-wrapper">
+                                <i class="fas ${ach.icon}"></i>
+                            </div>
+                            <h3 class="font-bold text-xl text-white mt-2">${ach.title}</h3>
+                            <p class="text-sm text-gray-400 mt-1">${ach.description}</p>
+                        </div>
+                    `;
+                    unlockedGrid.innerHTML += card;
+                } else {
+                    const card = `
+                        <div class="locked-medal text-center p-4 flex flex-col items-center justify-center">
+                            <div class="tooltip">${ach.description}</div>
+                            <div class="text-4xl text-gray-600">
+                                <i class="fas ${ach.icon}"></i>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-2">${ach.title}</p>
+                        </div>
+                    `;
+                    lockedGrid.innerHTML += card;
+                }
+            });
+
+            summaryText.textContent = `Você desbloqueou ${unlockedCount} de ${allAchievements.length} conquistas.`;
+
+            if (unlockedCount === 0) {
+                unlockedGrid.innerHTML = `<p class="text-gray-400 md:col-span-2 lg:col-span-3">Nenhuma medalha desbloqueada ainda. Continue se esforçando!</p>`;
+            }
+        };
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                const userRef = ref(database, 'users/' + user.uid);
+                try {
+                    const snapshot = await get(userRef);
+                    if (snapshot.exists()) {
+                        const userData = snapshot.val();
+                        userNameSidebar.textContent = `${userData.firstName || ''} ${userData.lastName || ''}`.trim();
+                        renderAchievements(userData.achievements || {});
+                    }
+                    loadingOverlay.classList.add('hidden');
+                    appContent.classList.remove('hidden');
+                } catch (error) {
+                    console.error("Error loading user data:", error);
+                    loadingOverlay.classList.add('hidden');
+                }
+            } else {
+                window.location.href = './index.html';
+            }
+        });
+    </script>
+</body>
+</html>

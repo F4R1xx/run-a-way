@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RunAWay</title>
+    <title>RunAWay - Gráficos</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="icon" type="image/png" href="logo.png">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -17,48 +17,106 @@
             --background-color: #282828;
             --card-color: #333333;
             --text-color: #E0E0E0;
-        }
-        html, body {
-            height: 100%;
+            --scanline-bg: #202020;
         }
         body { 
             font-family: 'Chakra Petch', sans-serif; 
-            background-color: var(--background-color); 
+            background-color: var(--scanline-bg); 
             color: var(--text-color); 
+            position: relative;
         }
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, rgba(18, 18, 18, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 100% 4px, 4px 100%;
+            pointer-events: none;
+            z-index: -1;
+            animation: scan 10s linear infinite;
+        }
+        @keyframes scan {
+            from { background-position-y: 0; }
+            to { background-position-y: 200px; }
+        }
+
+        .loader { width: 50px; height: 50px; border: 5px solid #555; border-top-color: var(--glow-color); border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
         .content-card {
-            background-color: var(--card-color);
+            background-color: rgba(40, 40, 40, 0.8);
+            backdrop-filter: blur(5px);
             border-radius: 1rem;
             padding: 1.5rem;
-            border: 1px solid rgba(255, 119, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+            animation: float-in 0.5s ease-out forwards;
+            opacity: 0;
         }
-        .glow-button { 
-            background: transparent; 
-            border: 2px solid var(--glow-color); 
-            color: var(--glow-color); 
-            text-shadow: 0 0 5px var(--glow-color); 
-            box-shadow: 0 0 10px rgba(255, 119, 0, 0.5), inset 0 0 10px rgba(255, 119, 0, 0.3); 
-            transition: all 0.3s ease; 
+        @keyframes float-in {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
-        .glow-button:hover { 
-            background: var(--glow-color); 
-            color: #000; 
-            text-shadow: none; 
-            box-shadow: 0 0 20px rgba(255, 119, 0, 0.8), 0 0 30px rgba(255, 119, 0, 0.6); 
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+            border-color: var(--glow-color);
         }
-        .loader { width: 50px; height: 50px; border: 5px solid #555; border-top-color: var(--glow-color); border-radius: 50%; animation: spin 1s linear infinite; box-shadow: 0 0 15px var(--glow-color); }
-        @keyframes spin { to { transform: rotate(360deg); } }
+        .stat-card .stat-value {
+            color: var(--glow-color);
+            text-shadow: 0 0 10px var(--glow-color);
+        }
+        .filter-btn {
+            background-color: rgba(255,255,255,0.05);
+            transition: all 0.2s ease-in-out;
+        }
+        .filter-btn:hover {
+            background-color: rgba(255,255,255,0.1);
+            color: var(--glow-color);
+        }
+        .filter-btn.active {
+            background-color: var(--glow-color);
+            color: var(--background-color);
+            font-weight: bold;
+        }
+        
+        /* --- CORREÇÃO DO HEATMAP --- */
+        .heatmap-container {
+            display: grid;
+            grid-template-rows: repeat(7, 1fr);
+            grid-auto-flow: column;
+            grid-auto-columns: minmax(0, 1fr); /* Colunas flexíveis */
+            gap: 3px; /* Espaçamento reduzido */
+        }
+        .heatmap-day {
+            aspect-ratio: 1 / 1; /* Mantém os quadrados perfeitos */
+            background-color: #444;
+            border-radius: 3px;
+            position: relative;
+        }
+        .heatmap-day:hover .tooltip {
+            visibility: visible;
+            opacity: 1;
+        }
+        .tooltip {
+            visibility: hidden; opacity: 0; position: absolute; bottom: 120%; left: 50%; transform: translateX(-50%);
+            background-color: #1a1a1a; color: var(--text-color); padding: 4px 8px; border-radius: 4px;
+            font-size: 0.75rem; white-space: nowrap; z-index: 10; transition: all 0.2s ease; pointer-events: none;
+        }
     </style>
 </head>
 <body class="h-screen">
 
-    <!-- Loading Overlay -->
     <div id="loading-overlay" class="fixed inset-0 bg-[#282828] flex items-center justify-center z-50">
         <div class="loader"></div>
     </div>
 
     <div id="app-content" class="hidden flex w-full h-full">
-        <!-- Sidebar & Mobile Menu Button -->
+        <!-- Sidebar -->
         <button id="menu-open-btn" class="md:hidden fixed top-6 left-6 z-30 text-white bg-black/20 p-2 rounded-md"><i class="fas fa-bars text-xl"></i></button>
         <aside id="sidebar" class="fixed md:relative inset-y-0 left-0 w-64 bg-black/30 backdrop-blur-sm p-6 flex flex-col z-40 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out">
             <button id="menu-close-btn" class="md:hidden absolute top-6 right-6 text-white"><i class="fas fa-times text-2xl"></i></button>
@@ -66,7 +124,7 @@
                 <i class="fas fa-user-circle text-4xl text-gray-400"></i>
                 <div>
                     <h2 id="user-name-sidebar" class="font-bold text-lg text-white"></h2>
-                    <a href="#" class="text-sm text-gray-400 hover:text-orange-400">Seu Perfil</a>
+                    <a href="./perfil.html" class="text-sm text-gray-400 hover:text-orange-400">Seu Perfil</a>
                 </div>
             </div>
             <nav class="mt-10 flex flex-col gap-4">
@@ -74,6 +132,7 @@
                 <a href="./cadastrar-caminhada.html" class="text-lg font-semibold hover:text-orange-400 transition-colors">Cadastrar Caminhada</a>
                 <a href="./minhas-caminhadas.html" class="text-lg font-semibold hover:text-orange-400 transition-colors">Ver Caminhadas</a>
                 <a href="./graficos.html" class="text-lg font-semibold text-orange-400 transition-colors">Gráficos</a>
+                <a href="./conquistas.html" class="text-lg font-semibold hover:text-orange-400 transition-colors">Conquistas</a>
             </nav>
             <div class="mt-auto">
                 <button id="logout-btn" class="w-full flex items-center justify-center gap-3 px-4 py-3 font-semibold rounded-lg text-red-500 hover:bg-red-500 hover:text-white transition-colors"><i class="fas fa-sign-out-alt"></i> Logout</button>
@@ -82,54 +141,52 @@
 
         <!-- Main Content -->
         <main class="flex-1 p-4 md:p-8 overflow-y-auto">
-            <div class="w-full max-w-6xl mx-auto">
-                <div class="flex justify-between items-center mb-8">
-                    <div class="text-center md:text-left">
-                        <h1 class="text-4xl font-bold tracking-wider text-white">Gráficos de Performance</h1>
-                        <p class="text-orange-400">Analise sua evolução ao longo do tempo.</p>
-                    </div>
-                    <a href="./home.html" class="hidden md:inline-block px-6 py-2 font-semibold rounded-lg glow-button uppercase tracking-wider">
-                        Voltar
-                    </a>
+            <div class="w-full max-w-7xl mx-auto">
+                <div class="text-center md:text-left mb-8">
+                    <h1 class="text-4xl font-bold tracking-wider text-white">Análise de Performance</h1>
+                    <p class="text-orange-400">Seus dados e recordes em um só lugar.</p>
                 </div>
 
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <!-- Weekly Distance Chart -->
-                    <div class="content-card">
-                        <h3 class="text-lg font-bold text-white mb-4">Distância nos Últimos 7 Dias (km)</h3>
-                        <canvas id="weeklyDistanceChart"></canvas>
-                    </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <!-- Stats Cards -->
+                </div>
 
-                    <!-- Recent Workouts Duration Chart -->
-                    <div class="content-card">
-                        <h3 class="text-lg font-bold text-white mb-4">Duração dos Últimos Treinos (minutos)</h3>
-                        <canvas id="recentDurationChart"></canvas>
-                    </div>
-
-                    <!-- Monthly Calories Chart -->
-                    <div class="content-card">
-                        <h3 class="text-lg font-bold text-white mb-4">Calorias Queimadas por Mês</h3>
-                        <canvas id="monthlyCaloriesChart"></canvas>
-                    </div>
-                    
-                    <!-- Monthly Distance Chart -->
-                    <div class="content-card">
-                        <h3 class="text-lg font-bold text-white mb-4">Distância Total por Mês (km)</h3>
-                        <div class="max-w-md mx-auto">
-                            <canvas id="monthlyDistancePieChart"></canvas>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="content-card lg:col-span-2" style="animation-delay: 300ms;">
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
+                            <h3 class="text-lg font-bold text-white mb-2 sm:mb-0">Evolução da Distância (km)</h3>
+                            <div id="filter-container" class="flex items-center gap-2">
+                                <button class="filter-btn text-xs px-3 py-1 rounded-full active" data-days="7">7 Dias</button>
+                                <button class="filter-btn text-xs px-3 py-1 rounded-full" data-days="30">30 Dias</button>
+                            </div>
                         </div>
+                        <canvas id="main-chart"></canvas>
+                    </div>
+
+                    <div class="content-card" style="animation-delay: 400ms;">
+                        <h3 class="text-lg font-bold text-white mb-4">Atributos de Corredor</h3>
+                        <canvas id="radar-chart"></canvas>
+                    </div>
+
+                    <div class="content-card lg:col-span-3" style="animation-delay: 500ms;">
+                        <h3 class="text-lg font-bold text-white mb-4">Mapa de Atividades do Ano</h3>
+                        <div id="heatmap-container" class="heatmap-container"></div>
+                    </div>
+
+                    <div class="content-card" style="animation-delay: 600ms;">
+                        <h3 class="text-lg font-bold text-white mb-4">Atividade por Dia da Semana</h3>
+                        <canvas id="day-of-week-chart"></canvas>
+                    </div>
+
+                    <div class="content-card lg:col-span-2" style="animation-delay: 700ms;">
+                        <h3 class="text-lg font-bold text-white mb-4">Distância Mensal (Ano Atual)</h3>
+                        <canvas id="monthly-distance-chart"></canvas>
                     </div>
                 </div>
                 
                 <div id="no-data-message" class="hidden text-center content-card mt-6">
                     <p class="text-gray-400">Não há dados suficientes para gerar os gráficos.</p>
                     <p class="text-gray-500 text-sm">Comece registrando algumas caminhadas!</p>
-                </div>
-
-                <div class="text-center mt-8 md:hidden">
-                     <a href="./home.html" class="inline-block px-8 py-3 font-semibold rounded-lg glow-button uppercase tracking-wider">
-                        Voltar
-                    </a>
                 </div>
             </div>
         </main>
@@ -148,102 +205,34 @@
         const menuCloseBtn = document.getElementById('menu-close-btn');
         const userNameSidebar = document.getElementById('user-name-sidebar');
         const logoutBtn = document.getElementById('logout-btn');
+        const filterContainer = document.getElementById('filter-container');
 
-        // Menu Logic
-        menuOpenBtn.addEventListener('click', () => { sidebar.classList.remove('-translate-x-full'); menuOpenBtn.classList.add('hidden'); });
-        menuCloseBtn.addEventListener('click', () => { sidebar.classList.add('-translate-x-full'); menuOpenBtn.classList.remove('hidden'); });
+        let mainChartInstance = null;
+        let allUserWalks = [];
+
+        menuOpenBtn.addEventListener('click', () => sidebar.classList.remove('-translate-x-full'));
+        menuCloseBtn.addEventListener('click', () => sidebar.classList.add('-translate-x-full'));
         logoutBtn.addEventListener('click', () => signOut(auth));
-
-        // Chart.js Global Config
-        Chart.defaults.color = '#E0E0E0';
-        Chart.defaults.borderColor = 'rgba(255, 119, 0, 0.2)';
-        Chart.defaults.font.family = "'Chakra Petch', sans-serif";
-
-        const processChartData = (walks) => {
-            const walksArray = Object.values(walks).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-            const now = new Date();
-            const currentYear = now.getFullYear();
-            const monthNames = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
-
-            // --- 1. Weekly Distance Data ---
-            const last7DaysLabels = [];
-            const last7DaysDistance = [];
-            for (let i = 6; i >= 0; i--) {
-                const d = new Date();
-                d.setDate(d.getDate() - i);
-                const dateString = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-                last7DaysLabels.push(`${d.getDate()}/${d.getMonth() + 1}`);
-                const walksOnDay = walksArray.filter(w => w.date === dateString);
-                last7DaysDistance.push(walksOnDay.reduce((sum, w) => sum + w.distance, 0));
+        filterContainer.addEventListener('click', (e) => {
+            if (e.target.tagName === 'BUTTON') {
+                document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+                e.target.classList.add('active');
+                createOrUpdateMainChart(parseInt(e.target.dataset.days));
             }
+        });
 
-            // --- 2. Recent Workouts Duration Data ---
-            const recentWalks = walksArray.slice(0, 6).reverse();
-            const recentDurationLabels = recentWalks.map(w => {
-                const [y, m, d] = w.date.split('-');
-                return `${d}/${m}`;
-            });
-            const recentDurationData = recentWalks.map(w => {
-                const parts = w.duration.split(':');
-                return (+parts[0] * 60) + (+parts[1]) + (+parts[2] / 60);
-            });
+        Chart.defaults.color = 'rgba(224, 224, 224, 0.7)';
+        Chart.defaults.font.family = "'Chakra Petch', sans-serif";
+        Chart.defaults.plugins.tooltip.backgroundColor = 'rgba(10, 10, 10, 0.8)';
+        Chart.defaults.plugins.tooltip.titleFont = { weight: 'bold', size: 14 };
+        Chart.defaults.plugins.tooltip.bodyFont = { size: 12 };
+        Chart.defaults.plugins.tooltip.padding = 10;
+        Chart.defaults.plugins.tooltip.cornerRadius = 8;
+        Chart.defaults.plugins.tooltip.boxPadding = 4;
 
-            // --- 3. Monthly Data ---
-            const monthlyCalories = Array(12).fill(0);
-            const monthlyDistance = {};
-            walksArray.forEach(walk => {
-                const walkDate = new Date(walk.date);
-                if (walkDate.getFullYear() === currentYear) {
-                    monthlyCalories[walkDate.getMonth()] += walk.calories;
-                }
-                const monthYear = `${monthNames[walkDate.getMonth()]} ${walkDate.getFullYear()}`;
-                if (!monthlyDistance[monthYear]) monthlyDistance[monthYear] = 0;
-                monthlyDistance[monthYear] += walk.distance;
-            });
-
-            return { last7DaysLabels, last7DaysDistance, recentDurationLabels, recentDurationData, monthNames, monthlyCalories, monthlyDistance };
-        };
-
-        const createCharts = (data) => {
-            const { last7DaysLabels, last7DaysDistance, recentDurationLabels, recentDurationData, monthNames, monthlyCalories, monthlyDistance } = data;
-            const glowColor = '#FF7700';
-            const barChartOptions = { scales: { y: { beginAtZero: true } }, plugins: { legend: { display: false } } };
-
-            new Chart(document.getElementById('weeklyDistanceChart'), {
-                type: 'line',
-                data: {
-                    labels: last7DaysLabels,
-                    datasets: [{ data: last7DaysDistance, borderColor: glowColor, backgroundColor: 'rgba(255, 119, 0, 0.2)', fill: true, tension: 0.4 }]
-                },
-                options: { plugins: { legend: { display: false } } }
-            });
-
-            new Chart(document.getElementById('recentDurationChart'), {
-                type: 'bar',
-                data: {
-                    labels: recentDurationLabels,
-                    datasets: [{ data: recentDurationData, backgroundColor: '#3399FF' }]
-                },
-                options: barChartOptions
-            });
-
-            new Chart(document.getElementById('monthlyCaloriesChart'), {
-                type: 'bar',
-                data: {
-                    labels: monthNames,
-                    datasets: [{ data: monthlyCalories, backgroundColor: glowColor }]
-                },
-                options: barChartOptions
-            });
-            
-            new Chart(document.getElementById('monthlyDistancePieChart'), {
-                type: 'doughnut',
-                data: {
-                    labels: Object.keys(monthlyDistance),
-                    datasets: [{ data: Object.values(monthlyDistance), backgroundColor: ['#FF7700', '#FF9933', '#FFB366', '#FFCC99', '#E66A00', '#CC5E00'] }]
-                },
-                options: { plugins: { legend: { position: 'bottom' } } }
-            });
+        const durationToMinutes = (duration) => {
+            const parts = duration.split(':');
+            return (+parts[0] * 60) + (+parts[1]) + (+parts[2] / 60);
         };
 
         onAuthStateChanged(auth, async (user) => {
@@ -254,8 +243,14 @@
                     const userData = snapshot.val();
                     userNameSidebar.textContent = `${userData.firstName || ''} ${userData.lastName || ''}`.trim();
                     if (userData.walks && Object.keys(userData.walks).length > 0) {
-                        const chartData = processChartData(userData.walks);
-                        createCharts(chartData);
+                        allUserWalks = Object.values(userData.walks).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+                        
+                        createOrUpdateMainChart(7); 
+                        createRadarChart();
+                        createHeatmap();
+                        createDayOfWeekChart();
+                        createMonthlyDistanceChart();
+
                     } else {
                         noDataMessage.classList.remove('hidden');
                     }
@@ -266,7 +261,138 @@
                 window.location.href = './index.html';
             }
         });
-    </script>
 
+        function createOrUpdateMainChart(days) {
+            const labels = [];
+            const data = [];
+            for (let i = days - 1; i >= 0; i--) {
+                const d = new Date();
+                d.setDate(d.getDate() - i);
+                const dateString = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+                labels.push(`${d.getDate()}/${d.getMonth() + 1}`);
+                const walksOnDay = allUserWalks.filter(w => w.date === dateString);
+                data.push(walksOnDay.reduce((sum, w) => sum + w.distance, 0));
+            }
+
+            const ctx = document.getElementById('main-chart').getContext('2d');
+            const gradient = ctx.createLinearGradient(0, 0, 0, ctx.canvas.clientHeight);
+            gradient.addColorStop(0, 'rgba(255, 119, 0, 0.6)');
+            gradient.addColorStop(1, 'rgba(255, 119, 0, 0.1)');
+
+            if (mainChartInstance) {
+                mainChartInstance.data.labels = labels;
+                mainChartInstance.data.datasets[0].data = data;
+                mainChartInstance.update();
+            } else {
+                mainChartInstance = new Chart(ctx, {
+                    type: 'line',
+                    data: { labels, datasets: [{ data, borderColor: 'var(--glow-color)', backgroundColor: gradient, fill: true, tension: 0.4, pointBackgroundColor: 'var(--glow-color)', pointRadius: 4 }] },
+                    options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+                });
+            }
+        }
+
+        function createRadarChart() {
+            const last30DaysWalks = allUserWalks.filter(w => (new Date() - new Date(w.date)) / (1000 * 60 * 60 * 24) <= 30);
+            const totalDistance30d = last30DaysWalks.reduce((sum, w) => sum + w.distance, 0);
+            const resistanceScore = Math.min(100, (totalDistance30d / 200) * 100);
+            const uniqueDays30d = new Set(last30DaysWalks.map(w => w.date)).size;
+            const frequencyScore = Math.min(100, (uniqueDays30d / 20) * 100);
+            const totalCalories30d = last30DaysWalks.reduce((sum, w) => sum + w.calories, 0);
+            const calorieScore = Math.min(100, (totalCalories30d / 15000) * 100);
+            const paces = last30DaysWalks.filter(w => w.distance > 0).map(w => durationToMinutes(w.duration) / w.distance);
+            let speedScore = 0;
+            if (paces.length > 0) {
+                const avgPace = paces.reduce((a, b) => a + b, 0) / paces.length;
+                speedScore = Math.max(0, Math.min(100, (10 - avgPace) * 20));
+            }
+            
+            new Chart(document.getElementById('radar-chart'), {
+                type: 'radar',
+                data: {
+                    labels: ['Resistência', 'Frequência', 'Velocidade', 'Queima Calórica'],
+                    datasets: [{ label: 'Seus Atributos', data: [resistanceScore, frequencyScore, speedScore, calorieScore], backgroundColor: 'rgba(255, 119, 0, 0.2)', borderColor: 'var(--glow-color)', pointBackgroundColor: 'var(--glow-color)' }]
+                },
+                options: { scales: { r: { angleLines: { color: 'rgba(255,255,255,0.2)' }, grid: { color: 'rgba(255,255,255,0.2)' }, pointLabels: { font: { size: 12 } }, ticks: { display: false, beginAtZero: true, max: 100, stepSize: 25 } } }, plugins: { legend: { display: false } } }
+            });
+        }
+
+        function createHeatmap() {
+            const container = document.getElementById('heatmap-container');
+            container.innerHTML = '';
+            const walksByDate = {};
+            allUserWalks.forEach(walk => {
+                walksByDate[walk.date] = (walksByDate[walk.date] || 0) + walk.distance;
+            });
+
+            const today = new Date();
+            const year = today.getFullYear();
+            const startDate = new Date(year, 0, 1);
+            const endDate = new Date(year, 11, 31);
+
+            for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+                const dateString = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+                const distance = walksByDate[dateString] || 0;
+                
+                let colorClass = 'bg-gray-700';
+                if (distance > 0 && distance <= 5) colorClass = 'bg-orange-800';
+                else if (distance > 5 && distance <= 10) colorClass = 'bg-orange-600';
+                else if (distance > 10) colorClass = 'bg-orange-400';
+
+                const dayDiv = document.createElement('div');
+                dayDiv.className = `heatmap-day ${colorClass}`;
+                dayDiv.innerHTML = `<div class="tooltip">${d.toLocaleDateString('pt-BR')}: ${distance.toFixed(1)} km</div>`;
+                
+                if (d.getTime() === startDate.getTime()) {
+                    dayDiv.style.gridRowStart = d.getDay() + 1;
+                }
+                container.appendChild(dayDiv);
+            }
+        }
+
+        function createDayOfWeekChart() {
+            const dayCounts = [0, 0, 0, 0, 0, 0, 0]; // Sun - Sat
+            allUserWalks.forEach(walk => {
+                const day = new Date(walk.date).getDay();
+                dayCounts[day]++;
+            });
+
+            new Chart(document.getElementById('day-of-week-chart'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'],
+                    datasets: [{
+                        data: dayCounts,
+                        backgroundColor: ['#ff6384', '#36a2eb', '#ffce56', '#4bc0c0', '#9966ff', '#ff9f40', '#c9cbcf'],
+                    }]
+                },
+                options: { responsive: true, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12 } } } }
+            });
+        }
+
+        function createMonthlyDistanceChart() {
+            const monthlyDistances = Array(12).fill(0);
+            const currentYear = new Date().getFullYear();
+            allUserWalks.forEach(walk => {
+                const walkDate = new Date(walk.date);
+                if (walkDate.getFullYear() === currentYear) {
+                    monthlyDistances[walkDate.getMonth()] += walk.distance;
+                }
+            });
+
+            new Chart(document.getElementById('monthly-distance-chart'), {
+                type: 'bar',
+                data: {
+                    labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'],
+                    datasets: [{
+                        label: `Distância em ${currentYear}`,
+                        data: monthlyDistances,
+                        backgroundColor: 'rgba(50, 150, 255, 0.7)',
+                    }]
+                },
+                options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+            });
+        }
+    </script>
 </body>
 </html>

@@ -17,47 +17,13 @@
             --card-color: #333333;
             --text-color: #E0E0E0;
         }
-        html, body {
-            height: 100%;
-        }
-        body { 
-            font-family: 'Chakra Petch', sans-serif; 
-            background-color: var(--background-color); 
-            color: var(--text-color); 
-        }
-        .content-card {
-            background-color: var(--card-color);
-            border-radius: 1rem;
-            padding: 2rem;
-            border: 1px solid rgba(255, 119, 0, 0.1);
-            box-shadow: 0 0 15px rgba(255, 119, 0, 0.1);
-        }
-        .futuristic-input { 
-            background: rgba(0,0,0,0.2); 
-            border: none; 
-            border-bottom: 1px solid rgba(255, 119, 0, 0.3); 
-            color: var(--glow-color); 
-            transition: all 0.3s ease; 
-        }
-        .futuristic-input:focus { 
-            outline: none; 
-            border-bottom-color: var(--glow-color); 
-            box-shadow: 0 5px 15px -10px var(--glow-color); 
-        }
-        .glow-button { 
-            background: transparent; 
-            border: 2px solid var(--glow-color); 
-            color: var(--glow-color); 
-            text-shadow: 0 0 5px var(--glow-color); 
-            box-shadow: 0 0 10px rgba(255, 119, 0, 0.5), inset 0 0 10px rgba(255, 119, 0, 0.3); 
-            transition: all 0.3s ease; 
-        }
-        .glow-button:hover, .glow-button:disabled { 
-            background: var(--glow-color); 
-            color: #000; 
-            text-shadow: none; 
-            box-shadow: 0 0 20px rgba(255, 119, 0, 0.8), 0 0 30px rgba(255, 119, 0, 0.6); 
-        }
+        html, body { height: 100%; }
+        body { font-family: 'Chakra Petch', sans-serif; background-color: var(--background-color); color: var(--text-color); }
+        .content-card { background-color: var(--card-color); border-radius: 1rem; padding: 2rem; border: 1px solid rgba(255, 119, 0, 0.1); box-shadow: 0 0 15px rgba(255, 119, 0, 0.1); }
+        .futuristic-input { background: rgba(0,0,0,0.2); border: none; border-bottom: 1px solid rgba(255, 119, 0, 0.3); color: var(--glow-color); transition: all 0.3s ease; }
+        .futuristic-input:focus { outline: none; border-bottom-color: var(--glow-color); box-shadow: 0 5px 15px -10px var(--glow-color); }
+        .glow-button { background: transparent; border: 2px solid var(--glow-color); color: var(--glow-color); text-shadow: 0 0 5px var(--glow-color); box-shadow: 0 0 10px rgba(255, 119, 0, 0.5), inset 0 0 10px rgba(255, 119, 0, 0.3); transition: all 0.3s ease; }
+        .glow-button:hover, .glow-button:disabled { background: var(--glow-color); color: #000; text-shadow: none; box-shadow: 0 0 20px rgba(255, 119, 0, 0.8), 0 0 30px rgba(255, 119, 0, 0.6); }
         .glow-button:disabled { opacity: 0.5; cursor: not-allowed; }
         input[type="time"]::-webkit-calendar-picker-indicator { filter: invert(1) brightness(0.5) sepia(1) hue-rotate(330deg) saturate(5); }
         #level-up-modal { background-color: rgba(0, 0, 0, 0.7); backdrop-filter: blur(10px) saturate(150%); }
@@ -70,17 +36,35 @@
         @keyframes text-flicker { 0%, 18%, 22%, 25%, 53%, 57%, 100% { text-shadow: 0 0 10px var(--glow-color), 0 0 20px var(--glow-color), 0 0 40px #ff4500, 0 0 80px #ff4500; } 20%, 24%, 55% { text-shadow: none; } }
         .loader { width: 50px; height: 50px; border: 5px solid #555; border-top-color: var(--glow-color); border-radius: 50%; animation: spin 1s linear infinite; box-shadow: 0 0 15px var(--glow-color); }
         @keyframes spin { to { transform: rotate(360deg); } }
+        
+        /* Toast Notification Styles */
+        .toast {
+            background: rgba(10, 10, 10, 0.8);
+            backdrop-filter: blur(10px);
+            border-left: 4px solid var(--glow-color);
+            box-shadow: 0 0 25px rgba(0, 0, 0, 0.5);
+            animation: slideIn 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+        }
+        .toast.fade-out {
+            animation: fadeOut 0.5s ease-out forwards;
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(100%); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes fadeOut {
+            from { opacity: 1; transform: scale(1); }
+            to { opacity: 0; transform: scale(0.9); }
+        }
     </style>
 </head>
 <body class="h-screen">
     
-    <!-- Loading Overlay -->
     <div id="loading-overlay" class="fixed inset-0 bg-[#282828] flex items-center justify-center z-50">
         <div class="loader"></div>
     </div>
 
     <div id="app-content" class="hidden flex w-full h-full">
-        <!-- Sidebar & Mobile Menu Button -->
         <button id="menu-open-btn" class="md:hidden fixed top-6 left-6 z-30 text-white bg-black/20 p-2 rounded-md"><i class="fas fa-bars text-xl"></i></button>
         <aside id="sidebar" class="fixed md:relative inset-y-0 left-0 w-64 bg-black/30 backdrop-blur-sm p-6 flex flex-col z-40 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out">
             <button id="menu-close-btn" class="md:hidden absolute top-6 right-6 text-white"><i class="fas fa-times text-2xl"></i></button>
@@ -88,7 +72,7 @@
                 <i class="fas fa-user-circle text-4xl text-gray-400"></i>
                 <div>
                     <h2 id="user-name-sidebar" class="font-bold text-lg text-white"></h2>
-                    <a href="#" class="text-sm text-gray-400 hover:text-orange-400">Seu Perfil</a>
+                    <a href="./perfil.html" class="text-sm text-gray-400 hover:text-orange-400">Seu Perfil</a>
                 </div>
             </div>
             <nav class="mt-10 flex flex-col gap-4">
@@ -96,13 +80,13 @@
                 <a href="./cadastrar-caminhada.html" class="text-lg font-semibold text-orange-400 transition-colors">Cadastrar Caminhada</a>
                 <a href="./minhas-caminhadas.html" class="text-lg font-semibold hover:text-orange-400 transition-colors">Ver Caminhadas</a>
                 <a href="./graficos.html" class="text-lg font-semibold hover:text-orange-400 transition-colors">Gráficos</a>
+                <a href="./conquistas.html" class="text-lg font-semibold hover:text-orange-400 transition-colors">Conquistas</a>
             </nav>
             <div class="mt-auto">
                 <button id="logout-btn" class="w-full flex items-center justify-center gap-3 px-4 py-3 font-semibold rounded-lg text-red-500 hover:bg-red-500 hover:text-white transition-colors"><i class="fas fa-sign-out-alt"></i> Logout</button>
             </div>
         </aside>
 
-        <!-- Main Content -->
         <main class="flex-1 p-4 md:p-8 flex items-center justify-center">
              <div id="form-container" class="w-full max-w-2xl">
                 <div class="text-center mb-8">
@@ -140,7 +124,6 @@
         </main>
     </div>
 
-    <!-- Level Up Modal -->
     <div id="level-up-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center">
         <canvas id="particle-canvas" class="absolute inset-0 w-full h-full"></canvas>
         <div class="level-up-content text-center text-white">
@@ -149,15 +132,20 @@
             <button id="continue-btn" class="mt-8 px-8 py-3 font-semibold rounded-lg glow-button uppercase tracking-wider animate-pulse">Continuar</button>
         </div>
     </div>
+    
+    <!-- Toast Container -->
+    <div id="toast-container" class="fixed bottom-5 right-5 w-full max-w-sm z-50 flex flex-col gap-3">
+        <!-- Toasts serão inseridos aqui dinamicamente -->
+    </div>
 
     <script type="module">
         import { auth, database } from './firebase.js';
         import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { ref, push, set, get, update } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
+        import { checkAchievements } from './achievements.js';
 
         const loadingOverlay = document.getElementById('loading-overlay');
         const appContent = document.getElementById('app-content');
-        const formContainer = document.getElementById('form-container');
         const walkForm = document.getElementById('walk-form');
         const messageArea = document.getElementById('message-area');
         const submitBtn = document.getElementById('submit-btn');
@@ -173,9 +161,8 @@
         const logoutBtn = document.getElementById('logout-btn');
         let currentUser = null;
 
-        // Menu Logic
-        menuOpenBtn.addEventListener('click', () => { sidebar.classList.remove('-translate-x-full'); menuOpenBtn.classList.add('hidden'); });
-        menuCloseBtn.addEventListener('click', () => { sidebar.classList.add('-translate-x-full'); menuOpenBtn.classList.remove('hidden'); });
+        menuOpenBtn.addEventListener('click', () => { sidebar.classList.remove('-translate-x-full'); });
+        menuCloseBtn.addEventListener('click', () => { sidebar.classList.add('-translate-x-full'); });
         logoutBtn.addEventListener('click', () => signOut(auth));
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -183,6 +170,8 @@
             const dateFromUrl = urlParams.get('date');
             if (dateFromUrl) {
                 document.getElementById('walk-date').value = dateFromUrl;
+            } else {
+                document.getElementById('walk-date').valueAsDate = new Date();
             }
         });
 
@@ -202,6 +191,46 @@
             }
         });
 
+        const displayMultipleToasts = (achievements) => {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+
+            const tierColors = {
+                bronze: 'border-amber-600',
+                silver: 'border-slate-400',
+                gold: 'border-yellow-400'
+            };
+            const tierIconColors = {
+                bronze: 'text-amber-600',
+                silver: 'text-slate-400',
+                gold: 'text-yellow-400'
+            };
+
+            achievements.forEach((ach, index) => {
+                setTimeout(() => {
+                    const toast = document.createElement('div');
+                    toast.className = `toast w-full max-w-sm p-4 rounded-xl flex items-center gap-4 ${tierColors[ach.tier] || 'border-orange-500'}`;
+                    
+                    toast.innerHTML = `
+                        <div class="text-4xl ${tierIconColors[ach.tier] || 'text-yellow-400'}">
+                            <i class="fas ${ach.icon}"></i>
+                        </div>
+                        <div>
+                            <p class="font-bold text-lg text-white">Medalha Desbloqueada!</p>
+                            <p class="text-gray-200">${ach.title}</p>
+                        </div>
+                    `;
+                    
+                    container.appendChild(toast);
+
+                    setTimeout(() => {
+                        toast.classList.add('fade-out');
+                        toast.addEventListener('animationend', () => toast.remove());
+                    }, 4000); // O toast permanece por 4 segundos
+                }, index * 600); // Cada toast aparece 600ms depois do anterior
+            });
+        };
+
         let particles = [];
         function createParticles() {
             particles = [];
@@ -212,6 +241,7 @@
             }
         }
         function animateParticles() {
+            if(!canvas) return;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             particles.forEach(p => {
                 p.x += p.vx; p.y += p.vy; p.alpha -= 0.02; p.vy += 0.1;
@@ -233,7 +263,14 @@
 
         continueBtn.addEventListener('click', () => { window.location.href = './home.html'; });
 
-        const getXpForNextLevel = (level) => level <= 0 ? 100 : 100 * Math.pow(2, level - 1);
+        const getXpForNextLevel = (level) => {
+            const levelCap = 50;
+            const fixedXpAfterCap = 1000;
+            if (level >= levelCap) return fixedXpAfterCap;
+            const baseXP = 100;
+            const incrementPerLevel = 18;
+            return Math.floor(baseXP + (level - 1) * incrementPerLevel);
+        };
 
         const showMessage = (message, isSuccess = false) => {
             messageArea.innerHTML = message;
@@ -258,26 +295,42 @@
                 const userRef = ref(database, 'users/' + currentUser.uid);
                 const snapshot = await get(userRef);
                 const userData = snapshot.val();
-                const xpGained = Math.floor((distance * 1000) / 100);
+                
+                const xpGained = Math.floor(distance * 10);
                 walkData.xpGained = xpGained;
+
                 let currentLvl = userData.lvl || 1;
                 let currentXp = (userData.xp || 0) + xpGained;
                 let xpForNextLevel = getXpForNextLevel(currentLvl);
                 let leveledUp = false;
+
                 while (currentXp >= xpForNextLevel) {
-                    currentXp -= xpForNextLevel; currentLvl++;
+                    currentXp -= xpForNextLevel; 
+                    currentLvl++;
                     xpForNextLevel = getXpForNextLevel(currentLvl);
                     leveledUp = true;
                 }
-                const updates = { '/lvl': currentLvl, '/xp': currentXp };
+
+                const updates = { 'lvl': currentLvl, 'xp': currentXp };
                 const newWalkRef = push(ref(database, 'users/' + currentUser.uid + '/walks'));
+                
                 await set(newWalkRef, walkData);
                 await update(userRef, updates);
+
+                const newAchievements = await checkAchievements(currentUser.uid);
+
                 if (leveledUp) {
                     triggerLevelUpAnimation(currentLvl);
                 } else {
-                    showMessage(`Caminhada registrada! <span class="font-bold glow-text">+${xpGained} XP</span>.`, true);
-                    setTimeout(() => { window.location.href = './home.html'; }, 1500);
+                    if (newAchievements.length > 0) {
+                        displayMultipleToasts(newAchievements);
+                        setTimeout(() => {
+                            window.location.href = './home.html';
+                        }, newAchievements.length * 600 + 4000); // Espera todos os toasts aparecerem e o último sumir
+                    } else {
+                        showMessage(`Caminhada registrada! <span class="font-bold glow-text">+${xpGained} XP</span>.`, true);
+                        setTimeout(() => { window.location.href = './home.html'; }, 1500);
+                    }
                 }
             } catch (error) {
                 console.error("Erro ao salvar caminhada:", error);

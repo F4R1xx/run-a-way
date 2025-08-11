@@ -62,17 +62,18 @@
         input[type="time"]::-webkit-calendar-picker-indicator { filter: invert(1) brightness(0.5) sepia(1) hue-rotate(330deg) saturate(5); }
         .loader { width: 50px; height: 50px; border: 5px solid #555; border-top-color: var(--glow-color); border-radius: 50%; animation: spin 1s linear infinite; box-shadow: 0 0 15px var(--glow-color); }
         @keyframes spin { to { transform: rotate(360deg); } }
+        #achievement-toast { background: rgba(10, 10, 10, 0.8); backdrop-filter: blur(10px); border: 1px solid var(--glow-color); box-shadow: 0 0 25px rgba(255, 119, 0, 0.4); transform: translateY(150%); transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1); }
+        #achievement-toast.show { transform: translateY(0); }
     </style>
 </head>
 <body class="h-screen">
     
-    <!-- Loading Overlay -->
     <div id="loading-overlay" class="fixed inset-0 bg-[#282828] flex items-center justify-center z-50">
         <div class="loader"></div>
     </div>
 
     <div id="app-content" class="hidden flex w-full h-full">
-        <!-- Sidebar & Mobile Menu Button -->
+        <!-- Sidebar -->
         <button id="menu-open-btn" class="md:hidden fixed top-6 left-6 z-30 text-white bg-black/20 p-2 rounded-md"><i class="fas fa-bars text-xl"></i></button>
         <aside id="sidebar" class="fixed md:relative inset-y-0 left-0 w-64 bg-black/30 backdrop-blur-sm p-6 flex flex-col z-40 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out">
             <button id="menu-close-btn" class="md:hidden absolute top-6 right-6 text-white"><i class="fas fa-times text-2xl"></i></button>
@@ -80,14 +81,15 @@
                 <i class="fas fa-user-circle text-4xl text-gray-400"></i>
                 <div>
                     <h2 id="user-name-sidebar" class="font-bold text-lg text-white"></h2>
-                    <a href="#" class="text-sm text-gray-400 hover:text-orange-400">Seu Perfil</a>
+                    <a href="./perfil.html" class="text-sm text-gray-400 hover:text-orange-400">Seu Perfil</a>
                 </div>
             </div>
             <nav class="mt-10 flex flex-col gap-4">
                 <a href="./home.html" class="text-lg font-semibold hover:text-orange-400 transition-colors">Painel</a>
-                <a href="./cadastrar-caminhada.html" class="text-lg font-semibold text-orange-400 transition-colors">Cadastrar Caminhada</a>
+                <a href="./cadastrar-caminhada.html" class="text-lg font-semibold hover:text-orange-400 transition-colors">Cadastrar Caminhada</a>
                 <a href="./minhas-caminhadas.html" class="text-lg font-semibold hover:text-orange-400 transition-colors">Ver Caminhadas</a>
                 <a href="./graficos.html" class="text-lg font-semibold hover:text-orange-400 transition-colors">Gráficos</a>
+                <a href="./conquistas.html" class="text-lg font-semibold hover:text-orange-400 transition-colors">Conquistas</a>
             </nav>
             <div class="mt-auto">
                 <button id="logout-btn" class="w-full flex items-center justify-center gap-3 px-4 py-3 font-semibold rounded-lg text-red-500 hover:bg-red-500 hover:text-white transition-colors"><i class="fas fa-sign-out-alt"></i> Logout</button>
@@ -132,10 +134,22 @@
         </main>
     </div>
 
+    <!-- Achievement Unlocked Toast -->
+    <div id="achievement-toast" class="fixed bottom-5 right-5 w-full max-w-sm p-4 rounded-xl z-50">
+        <div class="flex items-center gap-4">
+            <div id="toast-icon" class="text-4xl"></div>
+            <div>
+                <p class="font-bold text-lg text-white">Medalha Desbloqueada!</p>
+                <p id="toast-title" class="text-gray-200"></p>
+            </div>
+        </div>
+    </div>
+
     <script type="module">
         import { auth, database } from './firebase.js';
         import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { ref, get, update } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
+        import { checkAchievements } from './achievements.js';
 
         const loadingOverlay = document.getElementById('loading-overlay');
         const appContent = document.getElementById('app-content');
@@ -155,12 +169,18 @@
         const urlParams = new URLSearchParams(window.location.search);
         walkId = urlParams.get('id');
 
-        // Menu Logic
-        menuOpenBtn.addEventListener('click', () => { sidebar.classList.remove('-translate-x-full'); menuOpenBtn.classList.add('hidden'); });
-        menuCloseBtn.addEventListener('click', () => { sidebar.classList.add('-translate-x-full'); menuOpenBtn.classList.remove('hidden'); });
+        menuOpenBtn.addEventListener('click', () => { sidebar.classList.remove('-translate-x-full'); });
+        menuCloseBtn.addEventListener('click', () => { sidebar.classList.add('-translate-x-full'); });
         logoutBtn.addEventListener('click', () => signOut(auth));
 
-        const getXpForNextLevel = (level) => level <= 0 ? 100 : 100 * Math.pow(2, level - 1);
+        const getXpForNextLevel = (level) => {
+            const levelCap = 50;
+            const fixedXpAfterCap = 1000;
+            if (level >= levelCap) return fixedXpAfterCap;
+            const baseXP = 100;
+            const incrementPerLevel = 18;
+            return Math.floor(baseXP + (level - 1) * incrementPerLevel);
+        };
 
         const showMessage = (message, isSuccess = false) => {
             messageArea.innerHTML = message;
@@ -197,12 +217,10 @@
                         loadingOverlay.classList.add('hidden');
                         appContent.classList.remove('hidden');
                     } else {
-                        alert("Caminhada não encontrada.");
                         window.location.href = './minhas-caminhadas.html';
                     }
                 } catch (error) {
                     console.error("Erro ao carregar dados:", error);
-                    alert("Não foi possível carregar os dados.");
                     window.location.href = './minhas-caminhadas.html';
                 }
 
@@ -223,7 +241,7 @@
                 distance: updatedDistance,
                 calories: parseInt(document.getElementById('walk-calories').value),
                 createdAt: originalWalkData.createdAt,
-                xpGained: Math.floor((updatedDistance * 1000) / 100)
+                xpGained: Math.floor(updatedDistance * 10)
             };
 
             try {
@@ -249,6 +267,8 @@
 
                 const userRef = ref(database, `users/${currentUser.uid}`);
                 await update(userRef, { lvl: newLvl, xp: totalXp });
+                
+                await checkAchievements(currentUser.uid);
 
                 showMessage("Caminhada atualizada com sucesso!", true);
                 setTimeout(() => {

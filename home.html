@@ -108,7 +108,7 @@
                 <i class="fas fa-user-circle text-4xl text-gray-400"></i>
                 <div>
                     <h2 id="user-name-sidebar" class="font-bold text-lg text-white">Carregando...</h2>
-                    <a href="#" class="text-sm text-gray-400 hover:text-orange-400">Seu Perfil</a>
+                    <a href="/perfil.html" class="text-sm text-gray-400 hover:text-orange-400">Seu Perfil</a>
                 </div>
             </div>
             <nav class="mt-10 flex flex-col gap-4">
@@ -116,6 +116,7 @@
                 <a href="./cadastrar-caminhada.html" class="text-lg font-semibold hover:text-orange-400 transition-colors">Cadastrar Caminhada</a>
                 <a href="./minhas-caminhadas.html" class="text-lg font-semibold hover:text-orange-400 transition-colors">Ver Caminhadas</a>
                 <a href="./graficos.html" class="text-lg font-semibold hover:text-orange-400 transition-colors">Gráficos</a>
+                <a href="./conquistas.html" class="text-lg font-semibold hover:text-orange-400 transition-colors">Conquistas</a>
             </nav>
             <div class="mt-auto">
                 <button id="logout-btn" class="w-full flex items-center justify-center gap-3 px-4 py-3 font-semibold rounded-lg text-red-500 hover:bg-red-500 hover:text-white transition-colors"><i class="fas fa-sign-out-alt"></i> Logout</button>
@@ -241,8 +242,25 @@
         menuOpenBtn.addEventListener('click', () => { sidebar.classList.remove('-translate-x-full'); menuOpenBtn.classList.add('hidden'); });
         menuCloseBtn.addEventListener('click', () => { sidebar.classList.add('-translate-x-full'); menuOpenBtn.classList.remove('hidden'); });
 
-        // --- Helper Functions ---
-        const getXpForNextLevel = (level) => level <= 0 ? 100 : 100 * Math.pow(2, level - 1);
+        /**
+         * Calculates the XP required for the next level with a more balanced curve.
+         * @param {number} level - The current level.
+         * @returns {number} The total XP required to reach the next level.
+         */
+        const getXpForNextLevel = (level) => {
+            const levelCap = 50;
+            const fixedXpAfterCap = 1000; // Equivalent to 100km
+            
+            if (level >= levelCap) {
+                return fixedXpAfterCap;
+            }
+            
+            // For levels 1-49, use a linear progression
+            const baseXP = 100; // XP for level 1 (10km)
+            const incrementPerLevel = 18; // Additional XP per level, makes the curve smoother
+            
+            return Math.floor(baseXP + (level - 1) * incrementPerLevel);
+        };
 
         // --- Calendar Logic ---
         const renderCalendar = () => {
@@ -288,7 +306,7 @@
                 
                 const totalKm = walksOnDay.reduce((sum, walk) => sum + walk.distance, 0);
                 const totalCalories = walksOnDay.reduce((sum, walk) => sum + walk.calories, 0);
-                const totalXp = walksOnDay.reduce((sum, walk) => sum + walk.xpGained, 0);
+                const totalXp = walksOnDay.reduce((sum, walk) => sum + (walk.xpGained || 0), 0);
                 const [y, m, d] = date.split('-');
 
                 walkPopover.innerHTML = `
@@ -335,7 +353,7 @@
                         <p class="text-sm text-gray-400 mt-2">Duração <span class="block text-white font-semibold">${walk.duration}</span></p>
                         <p class="text-sm text-gray-400 mt-2">Distância (km) <span class="block text-white font-semibold">${walk.distance.toFixed(2)}</span></p>
                         <p class="text-sm text-gray-400 mt-2">Calorias <span class="block text-white font-semibold">${walk.calories}</span></p>
-                        <p class="mt-2 font-bold glow-text">+${walk.xpGained}XP</p>
+                        <p class="mt-2 font-bold glow-text">+${walk.xpGained || 0}XP</p>
                     </div>
                 `;
                 walksContainer.innerHTML += card;
