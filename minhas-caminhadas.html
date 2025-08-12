@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RunAWay</title>
+    <title>RunAWay - Meu Histórico</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="icon" type="image/png" href="logo.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -16,40 +16,47 @@
             --background-color: #282828;
             --card-color: #333333;
             --text-color: #E0E0E0;
-        }
-        html, body {
-            height: 100%;
+            --scanline-bg: #202020;
         }
         body { 
             font-family: 'Chakra Petch', sans-serif; 
-            background-color: var(--background-color); 
+            background-color: var(--scanline-bg); 
             color: var(--text-color); 
         }
-        .content-card {
-            background-color: var(--card-color);
-            border-radius: 1rem;
-            padding: 1.5rem;
-            border: 1px solid rgba(255, 119, 0, 0.1);
-        }
-        .glow-button { 
-            background: transparent; 
-            border: 2px solid var(--glow-color); 
-            color: var(--glow-color); 
-            text-shadow: 0 0 5px var(--glow-color); 
-            box-shadow: 0 0 10px rgba(255, 119, 0, 0.5), inset 0 0 10px rgba(255, 119, 0, 0.3); 
-            transition: all 0.3s ease; 
-        }
-        .glow-button:hover { 
-            background: var(--glow-color); 
-            color: #000; 
-            text-shadow: none; 
-            box-shadow: 0 0 20px rgba(255, 119, 0, 0.8), 0 0 30px rgba(255, 119, 0, 0.6); 
-        }
-        .custom-scrollbar::-webkit-scrollbar { width: 8px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); border-radius: 8px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background-color: var(--glow-color); border-radius: 8px; }
-        .loader { width: 50px; height: 50px; border: 5px solid #555; border-top-color: var(--glow-color); border-radius: 50%; animation: spin 1s linear infinite; box-shadow: 0 0 15px var(--glow-color); }
+        .loader { width: 50px; height: 50px; border: 5px solid #555; border-top-color: var(--glow-color); border-radius: 50%; animation: spin 1s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
+
+        .walk-item {
+            background-color: rgba(40, 40, 40, 0.8);
+            backdrop-filter: blur(5px);
+            border-radius: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease-in-out;
+            animation: slide-up 0.5s ease-out forwards;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        @keyframes slide-up {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .walk-item:hover {
+            transform: scale(1.02);
+            border-color: var(--glow-color);
+            box-shadow: 0 0 20px rgba(255, 119, 0, 0.2);
+        }
+
+        .date-block {
+            border-right: 1px solid rgba(255,255,255,0.1);
+        }
+        .xp-tag {
+            background-color: rgba(255, 119, 0, 0.1);
+            color: var(--glow-color);
+            border: 1px solid rgba(255, 119, 0, 0.3);
+            text-shadow: 0 0 5px var(--glow-color);
+        }
     </style>
 </head>
 <body class="h-screen">
@@ -59,18 +66,17 @@
     </div>
     
     <div id="confirm-modal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
-        <div class="content-card text-center max-w-sm m-4">
+        <div class="bg-gray-800 border border-gray-700 rounded-lg text-center max-w-sm m-4 p-6">
             <h3 class="text-xl font-bold text-white">Confirmar Exclusão</h3>
             <p class="text-gray-300 my-4">Tem certeza que deseja remover esta caminhada? Seu nível e XP serão recalculados. Esta ação não pode ser desfeita.</p>
             <div class="flex justify-center gap-4">
-                <button id="cancel-delete-btn" class="px-6 py-2 rounded-lg text-gray-300 hover:bg-gray-600 transition-colors">Cancelar</button>
+                <button id="cancel-delete-btn" class="px-6 py-2 rounded-lg text-gray-300 bg-gray-600 hover:bg-gray-500 transition-colors">Cancelar</button>
                 <button id="confirm-delete-btn" class="px-6 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white font-bold transition-colors">Remover</button>
             </div>
         </div>
     </div>
 
     <div id="app-content" class="hidden flex w-full h-full">
-        <!-- Sidebar -->
         <button id="menu-open-btn" class="md:hidden fixed top-6 left-6 z-30 text-white bg-black/20 p-2 rounded-md"><i class="fas fa-bars text-xl"></i></button>
         <aside id="sidebar" class="fixed md:relative inset-y-0 left-0 w-64 bg-black/30 backdrop-blur-sm p-6 flex flex-col z-40 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out">
             <button id="menu-close-btn" class="md:hidden absolute top-6 right-6 text-white"><i class="fas fa-times text-2xl"></i></button>
@@ -83,7 +89,7 @@
             </div>
             <nav class="mt-10 flex flex-col gap-4">
                 <a href="./home.html" class="text-lg font-semibold hover:text-orange-400 transition-colors">Painel</a>
-                <a href="./cadastrar-caminhada.html" class="text-lg font-semibold hover:text-orange-400 transition-colors">Cadastrar Caminhada</a>
+                <a href="./cadastrar-caminhada.html" class="text-lg font-semibold hover:text-orange-400 transition-colors">Registrar Atividade</a>
                 <a href="./minhas-caminhadas.html" class="text-lg font-semibold text-orange-400 transition-colors">Ver Caminhadas</a>
                 <a href="./graficos.html" class="text-lg font-semibold hover:text-orange-400 transition-colors">Gráficos</a>
                 <a href="./conquistas.html" class="text-lg font-semibold hover:text-orange-400 transition-colors">Conquistas</a>
@@ -93,32 +99,21 @@
             </div>
         </aside>
 
-        <!-- Main Content -->
         <main class="flex-1 p-4 md:p-8 overflow-y-auto">
-            <div class="w-full max-w-6xl mx-auto">
-                <div class="flex justify-between items-center mb-8">
-                    <div class="text-center md:text-left">
-                        <h1 class="text-4xl font-bold tracking-wider text-white">Meu Histórico</h1>
-                        <p class="text-orange-400">Todas as suas caminhadas registradas.</p>
-                    </div>
-                     <a href="./home.html" class="hidden md:inline-block px-6 py-2 font-semibold rounded-lg glow-button uppercase tracking-wider">
-                        Voltar
-                    </a>
+            <div class="w-full max-w-4xl mx-auto">
+                <div class="mb-8">
+                    <h1 class="text-4xl font-bold tracking-wider text-white">Histórico de Atividades</h1>
+                    <p id="summary-text" class="text-orange-400">Todos os seus registros de caminhada.</p>
                 </div>
 
-                <div id="walks-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <!-- Walk cards will be inserted here -->
+                <div id="walks-list" class="space-y-4">
+                    <!-- Walk items will be inserted here -->
                 </div>
                 
-                <div id="no-walks-history" class="hidden text-center content-card mt-6">
+                <div id="no-walks-history" class="hidden text-center bg-gray-800/50 rounded-lg p-10 mt-6">
                     <i class="fas fa-shoe-prints text-5xl text-gray-600"></i>
                     <p class="mt-4 text-gray-400">Você ainda não registrou nenhuma caminhada.</p>
-                </div>
-
-                 <div class="text-center mt-8 md:hidden">
-                     <a href="./home.html" class="inline-block px-8 py-3 font-semibold rounded-lg glow-button uppercase tracking-wider">
-                        Voltar
-                    </a>
+                    <a href="./cadastrar-caminhada.html" class="mt-4 inline-block px-6 py-2 font-semibold rounded-lg bg-orange-600 hover:bg-orange-500 text-white transition-colors">Registrar Primeira Caminhada</a>
                 </div>
             </div>
         </main>
@@ -132,8 +127,9 @@
 
         const loadingOverlay = document.getElementById('loading-overlay');
         const appContent = document.getElementById('app-content');
-        const walksGrid = document.getElementById('walks-grid');
+        const walksList = document.getElementById('walks-list');
         const noWalksHistoryMessage = document.getElementById('no-walks-history');
+        const summaryText = document.getElementById('summary-text');
         const confirmModal = document.getElementById('confirm-modal');
         const confirmDeleteBtn = document.getElementById('confirm-delete-btn');
         const cancelDeleteBtn = document.getElementById('cancel-delete-btn');
@@ -146,8 +142,8 @@
         let currentUser = null;
         let walkIdToDelete = null;
 
-        menuOpenBtn.addEventListener('click', () => { sidebar.classList.remove('-translate-x-full'); });
-        menuCloseBtn.addEventListener('click', () => { sidebar.classList.add('-translate-x-full'); });
+        menuOpenBtn.addEventListener('click', () => sidebar.classList.remove('-translate-x-full'));
+        menuCloseBtn.addEventListener('click', () => sidebar.classList.add('-translate-x-full'));
         logoutBtn.addEventListener('click', () => signOut(auth));
 
         const getXpForNextLevel = (level) => {
@@ -159,10 +155,11 @@
             return Math.floor(baseXP + (level - 1) * incrementPerLevel);
         };
         
-        const renderCards = (walksObject) => {
-            walksGrid.innerHTML = '';
+        const renderWalks = (walksObject) => {
+            walksList.innerHTML = '';
             if (!walksObject || Object.keys(walksObject).length === 0) {
                 noWalksHistoryMessage.classList.remove('hidden');
+                summaryText.textContent = "Nenhum registro encontrado.";
                 return;
             }
             noWalksHistoryMessage.classList.add('hidden');
@@ -170,29 +167,43 @@
             const walksArray = Object.entries(walksObject).map(([id, data]) => ({ id, ...data }));
             walksArray.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
             
-            walksArray.forEach(walk => {
-                const [year, month, day] = walk.date.split('-');
-                const formattedDate = `${day}/${month}/${year}`;
+            summaryText.textContent = `Exibindo ${walksArray.length} registros de atividades.`;
+
+            walksArray.forEach((walk, index) => {
+                const walkDate = new Date(walk.date);
+                const day = walkDate.getUTCDate();
+                const month = walkDate.toLocaleString('pt-BR', { month: 'short' }).replace('.', '');
+
                 const card = `
-                    <div class="content-card flex flex-col" data-walk-id="${walk.id}">
-                        <div class="flex justify-between items-center border-b border-gray-700 pb-2 mb-3">
-                            <p class="font-bold text-lg text-white">${formattedDate}</p>
-                            <div class="text-lg">
-                                <a href="./editar-caminhada.html?id=${walk.id}" class="text-blue-400 hover:text-blue-300 mx-2"><i class="fas fa-pencil-alt"></i></a>
-                                <button class="remove-btn text-red-500 hover:text-red-400 mx-2" data-id="${walk.id}"><i class="fas fa-trash-alt"></i></button>
+                    <div class="walk-item flex flex-col md:flex-row items-center p-4 gap-4" style="animation-delay: ${index * 50}ms;" data-walk-id="${walk.id}">
+                        <div class="date-block text-center p-4 w-full md:w-24 flex-shrink-0">
+                            <p class="text-4xl font-bold text-white">${String(day).padStart(2, '0')}</p>
+                            <p class="text-orange-400 uppercase text-sm">${month}</p>
+                        </div>
+                        <div class="flex-1 grid grid-cols-3 gap-4 text-center md:text-left">
+                            <div class="flex flex-col items-center md:items-start">
+                                <p class="text-sm text-gray-400 flex items-center gap-2"><i class="fas fa-route"></i> Distância</p>
+                                <p class="text-lg font-semibold text-white">${walk.distance.toFixed(2)} km</p>
+                            </div>
+                            <div class="flex flex-col items-center md:items-start">
+                                <p class="text-sm text-gray-400 flex items-center gap-2"><i class="fas fa-stopwatch"></i> Duração</p>
+                                <p class="text-lg font-semibold text-white">${walk.duration}</p>
+                            </div>
+                            <div class="flex flex-col items-center md:items-start">
+                                <p class="text-sm text-gray-400 flex items-center gap-2"><i class="fas fa-fire"></i> Calorias</p>
+                                <p class="text-lg font-semibold text-white">${walk.calories}</p>
                             </div>
                         </div>
-                        <div class="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-                            <span class="text-gray-400">Duração:</span> <span class="text-white font-semibold">${walk.duration}</span>
-                            <span class="text-gray-400">Distância:</span> <span class="text-white font-semibold">${walk.distance.toFixed(2)} km</span>
-                            <span class="text-gray-400">Calorias:</span> <span class="text-white font-semibold">${walk.calories}</span>
-                        </div>
-                        <div class="mt-auto pt-3 text-center text-lg font-bold" style="color: var(--glow-color); text-shadow: 0 0 5px var(--glow-color);">
-                            +${walk.xpGained || 0} XP
+                        <div class="flex flex-col items-center justify-center gap-2 md:w-40 text-center">
+                            <p class="xp-tag font-bold text-lg px-4 py-1 rounded-full">+${walk.xpGained || 0} XP</p>
+                            <div class="flex items-center gap-4 mt-2">
+                                <a href="./cadastrar-caminhada.html?id=${walk.id}" class="text-blue-400 hover:text-blue-300 text-lg transition-colors"><i class="fas fa-pencil-alt"></i></a>
+                                <button class="remove-btn text-red-500 hover:text-red-400 text-lg transition-colors" data-id="${walk.id}"><i class="fas fa-trash-alt"></i></button>
+                            </div>
                         </div>
                     </div>
                 `;
-                walksGrid.innerHTML += card;
+                walksList.innerHTML += card;
             });
         };
 
@@ -223,7 +234,7 @@
                 if(snapshot.exists()){
                     const userData = snapshot.val();
                     userNameSidebar.textContent = `${userData.firstName || ''} ${userData.lastName || ''}`.trim();
-                    renderCards(userData.walks);
+                    renderWalks(userData.walks);
                 }
                 loadingOverlay.classList.add('hidden');
                 appContent.classList.remove('hidden');
@@ -232,7 +243,7 @@
             }
         });
 
-        walksGrid.addEventListener('click', (e) => {
+        walksList.addEventListener('click', (e) => {
             const removeButton = e.target.closest('.remove-btn');
             if (removeButton) {
                 walkIdToDelete = removeButton.dataset.id;
@@ -253,12 +264,16 @@
             try {
                 const walkRef = ref(database, `users/${currentUser.uid}/walks/${walkIdToDelete}`);
                 await remove(walkRef);
+                
                 await recalculateUserLevel();
-                await checkAchievements(currentUser.uid); // Recalcula conquistas
-                document.querySelector(`div[data-walk-id="${walkIdToDelete}"]`).remove();
-                if (walksGrid.childElementCount === 0) {
-                    noWalksHistoryMessage.classList.remove('hidden');
+                await checkAchievements(currentUser.uid);
+                
+                const userRef = ref(database, 'users/' + currentUser.uid);
+                const snapshot = await get(userRef);
+                if(snapshot.exists()){
+                    renderWalks(snapshot.val().walks);
                 }
+
             } catch (error) {
                 console.error("Erro ao remover caminhada:", error);
             } finally {

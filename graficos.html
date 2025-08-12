@@ -84,16 +84,15 @@
             font-weight: bold;
         }
         
-        /* --- CORREÇÃO DO HEATMAP --- */
         .heatmap-container {
             display: grid;
             grid-template-rows: repeat(7, 1fr);
             grid-auto-flow: column;
-            grid-auto-columns: minmax(0, 1fr); /* Colunas flexíveis */
-            gap: 3px; /* Espaçamento reduzido */
+            grid-auto-columns: minmax(0, 1fr);
+            gap: 3px;
         }
         .heatmap-day {
-            aspect-ratio: 1 / 1; /* Mantém os quadrados perfeitos */
+            aspect-ratio: 1 / 1;
             background-color: #444;
             border-radius: 3px;
             position: relative;
@@ -116,7 +115,6 @@
     </div>
 
     <div id="app-content" class="hidden flex w-full h-full">
-        <!-- Sidebar -->
         <button id="menu-open-btn" class="md:hidden fixed top-6 left-6 z-30 text-white bg-black/20 p-2 rounded-md"><i class="fas fa-bars text-xl"></i></button>
         <aside id="sidebar" class="fixed md:relative inset-y-0 left-0 w-64 bg-black/30 backdrop-blur-sm p-6 flex flex-col z-40 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out">
             <button id="menu-close-btn" class="md:hidden absolute top-6 right-6 text-white"><i class="fas fa-times text-2xl"></i></button>
@@ -129,7 +127,7 @@
             </div>
             <nav class="mt-10 flex flex-col gap-4">
                 <a href="./home.html" class="text-lg font-semibold hover:text-orange-400 transition-colors">Painel</a>
-                <a href="./cadastrar-caminhada.html" class="text-lg font-semibold hover:text-orange-400 transition-colors">Cadastrar Caminhada</a>
+                <a href="./cadastrar-caminhada.html" class="text-lg font-semibold hover:text-orange-400 transition-colors">Registrar Atividade</a>
                 <a href="./minhas-caminhadas.html" class="text-lg font-semibold hover:text-orange-400 transition-colors">Ver Caminhadas</a>
                 <a href="./graficos.html" class="text-lg font-semibold text-orange-400 transition-colors">Gráficos</a>
                 <a href="./conquistas.html" class="text-lg font-semibold hover:text-orange-400 transition-colors">Conquistas</a>
@@ -139,7 +137,6 @@
             </div>
         </aside>
 
-        <!-- Main Content -->
         <main class="flex-1 p-4 md:p-8 overflow-y-auto">
             <div class="w-full max-w-7xl mx-auto">
                 <div class="text-center md:text-left mb-8">
@@ -148,7 +145,27 @@
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                    <!-- Stats Cards -->
+                    <div class="content-card stat-card flex items-center gap-4">
+                        <i class="fas fa-trophy text-4xl text-yellow-400"></i>
+                        <div>
+                            <p class="text-sm text-gray-400">Maior Distância</p>
+                            <p id="stat-record-distance" class="text-2xl font-bold stat-value">0 km</p>
+                        </div>
+                    </div>
+                    <div class="content-card stat-card flex items-center gap-4" style="animation-delay: 100ms;">
+                        <i class="fas fa-stopwatch text-4xl text-cyan-400"></i>
+                        <div>
+                            <p class="text-sm text-gray-400">Melhor Ritmo (Pace)</p>
+                            <p id="stat-best-pace" class="text-2xl font-bold stat-value">0 min/km</p>
+                        </div>
+                    </div>
+                    <div class="content-card stat-card flex items-center gap-4" style="animation-delay: 200ms;">
+                        <i class="fas fa-shoe-prints text-4xl text-lime-400"></i>
+                        <div>
+                            <p class="text-sm text-gray-400">Total de Atividades</p>
+                            <p id="stat-total-walks" class="text-2xl font-bold stat-value">0</p>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -206,6 +223,9 @@
         const userNameSidebar = document.getElementById('user-name-sidebar');
         const logoutBtn = document.getElementById('logout-btn');
         const filterContainer = document.getElementById('filter-container');
+        const statRecordDistance = document.getElementById('stat-record-distance');
+        const statBestPace = document.getElementById('stat-best-pace');
+        const statTotalWalks = document.getElementById('stat-total-walks');
 
         let mainChartInstance = null;
         let allUserWalks = [];
@@ -235,34 +255,7 @@
             return (+parts[0] * 60) + (+parts[1]) + (+parts[2] / 60);
         };
 
-        onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                const userRef = ref(database, 'users/' + user.uid);
-                const snapshot = await get(userRef);
-                if (snapshot.exists()) {
-                    const userData = snapshot.val();
-                    userNameSidebar.textContent = `${userData.firstName || ''} ${userData.lastName || ''}`.trim();
-                    if (userData.walks && Object.keys(userData.walks).length > 0) {
-                        allUserWalks = Object.values(userData.walks).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-                        
-                        createOrUpdateMainChart(7); 
-                        createRadarChart();
-                        createHeatmap();
-                        createDayOfWeekChart();
-                        createMonthlyDistanceChart();
-
-                    } else {
-                        noDataMessage.classList.remove('hidden');
-                    }
-                }
-                loadingOverlay.classList.add('hidden');
-                appContent.classList.remove('hidden');
-            } else {
-                window.location.href = './index.html';
-            }
-        });
-
-        function createOrUpdateMainChart(days) {
+        const createOrUpdateMainChart = (days) => {
             const labels = [];
             const data = [];
             for (let i = days - 1; i >= 0; i--) {
@@ -290,9 +283,9 @@
                     options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
                 });
             }
-        }
+        };
 
-        function createRadarChart() {
+        const createRadarChart = () => {
             const last30DaysWalks = allUserWalks.filter(w => (new Date() - new Date(w.date)) / (1000 * 60 * 60 * 24) <= 30);
             const totalDistance30d = last30DaysWalks.reduce((sum, w) => sum + w.distance, 0);
             const resistanceScore = Math.min(100, (totalDistance30d / 200) * 100);
@@ -304,7 +297,9 @@
             let speedScore = 0;
             if (paces.length > 0) {
                 const avgPace = paces.reduce((a, b) => a + b, 0) / paces.length;
-                speedScore = Math.max(0, Math.min(100, (10 - avgPace) * 20));
+                // --- FÓRMULA CORRIGIDA AQUI ---
+                // Escala de 15 min/km (nota 0) a 8 min/km (nota 100)
+                speedScore = Math.max(0, Math.min(100, ((15 - avgPace) / 7) * 100));
             }
             
             new Chart(document.getElementById('radar-chart'), {
@@ -315,48 +310,42 @@
                 },
                 options: { scales: { r: { angleLines: { color: 'rgba(255,255,255,0.2)' }, grid: { color: 'rgba(255,255,255,0.2)' }, pointLabels: { font: { size: 12 } }, ticks: { display: false, beginAtZero: true, max: 100, stepSize: 25 } } }, plugins: { legend: { display: false } } }
             });
-        }
+        };
 
-        function createHeatmap() {
+        const createHeatmap = () => {
             const container = document.getElementById('heatmap-container');
             container.innerHTML = '';
             const walksByDate = {};
             allUserWalks.forEach(walk => {
                 walksByDate[walk.date] = (walksByDate[walk.date] || 0) + walk.distance;
             });
-
             const today = new Date();
             const year = today.getFullYear();
             const startDate = new Date(year, 0, 1);
             const endDate = new Date(year, 11, 31);
-
             for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
                 const dateString = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
                 const distance = walksByDate[dateString] || 0;
-                
                 let colorClass = 'bg-gray-700';
                 if (distance > 0 && distance <= 5) colorClass = 'bg-orange-800';
                 else if (distance > 5 && distance <= 10) colorClass = 'bg-orange-600';
                 else if (distance > 10) colorClass = 'bg-orange-400';
-
                 const dayDiv = document.createElement('div');
                 dayDiv.className = `heatmap-day ${colorClass}`;
                 dayDiv.innerHTML = `<div class="tooltip">${d.toLocaleDateString('pt-BR')}: ${distance.toFixed(1)} km</div>`;
-                
                 if (d.getTime() === startDate.getTime()) {
                     dayDiv.style.gridRowStart = d.getDay() + 1;
                 }
                 container.appendChild(dayDiv);
             }
-        }
+        };
 
-        function createDayOfWeekChart() {
+        const createDayOfWeekChart = () => {
             const dayCounts = [0, 0, 0, 0, 0, 0, 0]; // Sun - Sat
             allUserWalks.forEach(walk => {
                 const day = new Date(walk.date).getDay();
                 dayCounts[day]++;
             });
-
             new Chart(document.getElementById('day-of-week-chart'), {
                 type: 'doughnut',
                 data: {
@@ -368,9 +357,9 @@
                 },
                 options: { responsive: true, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12 } } } }
             });
-        }
+        };
 
-        function createMonthlyDistanceChart() {
+        const createMonthlyDistanceChart = () => {
             const monthlyDistances = Array(12).fill(0);
             const currentYear = new Date().getFullYear();
             allUserWalks.forEach(walk => {
@@ -379,7 +368,6 @@
                     monthlyDistances[walkDate.getMonth()] += walk.distance;
                 }
             });
-
             new Chart(document.getElementById('monthly-distance-chart'), {
                 type: 'bar',
                 data: {
@@ -392,7 +380,48 @@
                 },
                 options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
             });
-        }
+        };
+        
+        const updateStatsCards = () => {
+            const recordDistance = Math.max(0, ...allUserWalks.map(w => w.distance));
+            const totalWalks = allUserWalks.length;
+            let bestPace = 0;
+            const paces = allUserWalks
+                .filter(w => w.distance > 0)
+                .map(w => durationToMinutes(w.duration) / w.distance);
+            if (paces.length > 0) {
+                bestPace = Math.min(...paces);
+            }
+            statRecordDistance.textContent = `${recordDistance.toFixed(2)} km`;
+            statBestPace.textContent = `${bestPace > 0 ? bestPace.toFixed(2) : 'N/A'} min/km`;
+            statTotalWalks.textContent = totalWalks;
+        };
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                const userRef = ref(database, 'users/' + user.uid);
+                const snapshot = await get(userRef);
+                if (snapshot.exists()) {
+                    const userData = snapshot.val();
+                    userNameSidebar.textContent = `${userData.firstName || ''} ${userData.lastName || ''}`.trim();
+                    if (userData.walks && Object.keys(userData.walks).length > 0) {
+                        allUserWalks = Object.values(userData.walks).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+                        updateStatsCards();
+                        createOrUpdateMainChart(7);
+                        createRadarChart();
+                        createHeatmap();
+                        createDayOfWeekChart();
+                        createMonthlyDistanceChart();
+                    } else {
+                        noDataMessage.classList.remove('hidden');
+                    }
+                }
+                loadingOverlay.classList.add('hidden');
+                appContent.classList.remove('hidden');
+            } else {
+                window.location.href = './index.html';
+            }
+        });
     </script>
 </body>
 </html>
